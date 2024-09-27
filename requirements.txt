@@ -1,0 +1,6 @@
+discord
+requests
+datetime
+asyncio
+colorama
+thread6
