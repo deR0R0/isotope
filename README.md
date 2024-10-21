@@ -11,6 +11,7 @@ Please do NOT run any DOS/DDOS (denial of service) attacks against this service.
 ## Features
 Commands:
 - Schedule (View today's schedule or a specific date)
+- Authorize (Connects user discord to Ion)
 
 Misc Features:
 - CLI for approved users that allow for different things!
