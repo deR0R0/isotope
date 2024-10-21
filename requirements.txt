@@ -4,3 +4,5 @@ datetime
 asyncio
 colorama
 thread6
+requests_oauthlib
+flask
