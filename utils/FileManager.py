@@ -39,6 +39,7 @@ class FManager:
                     return
         except FileNotFoundError:
             Logger.log(f"Couldn't find file: {file}")
+            return
 
     # Write file
     @staticmethod

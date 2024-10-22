@@ -6,6 +6,7 @@ import sys
 import os
 from utils.LogManager import Logger
 from utils.Configuration import *
+from utils.FileManager import FManager
 
 # Config
 oauthLink = "http://localhost:80/authorize"
@@ -38,7 +39,7 @@ def authorize():
         state = request.args.get("state")
         Logger.serv(f"Recieved Get Request for {auth_code}")
         oauth = OAuth2Session(client_id=CLIENTID, redirect_uri=oauthLink, scope="read")
-        oauth.fetch_token("https://ion.tjhsst.edu/oauth/token", code=auth_code, client_secret=OAUTHKEY)
+        token = oauth.fetch_token("https://ion.tjhsst.edu/oauth/token", code=auth_code, client_secret=OAUTHKEY)
     except InvalidGrantError:
         return {"Error": "Invalid Token, go back to discord!"}
     except Exception as err:
@@ -50,13 +51,17 @@ def authorize():
     for i in range(len(oauthusersList)):
         if oauthUsers[oauthusersList[i]] == state:
             oauthUsers[oauthusersList[i]] = oauth
+            oauthUsersTokens[oauthusersList[i]] = token
             Logger.serv("Successfully added user!")
 
     oauthusersList = None
     oauth = None
     auth_code = None
     state = None
-    return "Authorized"
+    # Write to File
+    FManager.write("tokens.json", oauthUsersTokens)
+    # Return
+    return token
     #return render_template("./success/success.html")
 
 def run():
