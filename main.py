@@ -13,7 +13,6 @@ import random
 import requests
 from requests_oauthlib import OAuth2Session
 from flask import render_template, Flask, request
-import oauthlib
 from oauthlib import oauth2
 # Time
 import time
@@ -79,12 +78,94 @@ async def on_ready():
             # Save Data
             if not FManager.write("config.json", config):
                 Logger.warn("There was an exception while saving config.json")
+
+
+    # Refresh tokens
+    if oauthUsersTokens != None:
+        for user in oauthUsersTokens:
+            if not isinstance(oauthUsersTokens[user], str):
+                oauthUsers[user] = OAuth2Session(client_id=CLIENTID, token=oauthUsersTokens[user])
+    else:
+        Logger.warn("Missing Tokens")
+
+
+    try:
+        await taskLoop.start()
+    except RuntimeError:
+        Logger.warn("Task already started")
             
 
+# CLI
+@lru_cache
+@client.event
+async def on_message(message: discord.Message):
+    global program_path
+    global config
 
+    if message.content.startswith(">isotope"):
+        if str(message.author.id) in config["approvedCLIUsers"]:
+            args = message.content.split()
+            args.pop(0)
 
-    # Start Tasks
-    await taskLoop.start()
+            if len(args) == 0:
+                await message.reply("Command Must Have Arguments")
+                return
+            
+            # Help
+            if args[0].lower() == "help":
+                await message.reply("No Help :(")
+
+            # Config
+            elif args[0].lower() == "config":
+                Logger.log(f"Giving config to {message.author}")
+                await message.reply(file=discord.File(f"{progPath}/data/config.json"))
+            
+            # Logs
+            elif args[0].lower() == "logs":
+                # Check if args is long enough
+                if len(args) == 1:
+                    await message.reply("Missing Args: ```[view / append]```")
+                    return
+
+                if args[1].lower() == "view":
+                    Logger.log(f"Giving logs to {message.author}")
+                    await message.reply(file=discord.File(f"{progPath}/data/logs.txt"))
+                elif args[1].lower() == "append":
+                    # Check if arg long enough
+                    
+                    # Pull string together
+                    msg = ""
+                    for arg in args:
+                        if arg not in ["logs", "append"]:
+                            msg = msg + arg + " "
+                    
+                    # Log it
+                    Logger.log(msg)
+                    await message.reply(f'Added "{msg}" to logs')
+                elif args[1].lower() == "clear":
+                    # Clear the logs
+                    FManager.write("logs.txt", "")
+                    await message.add_reaction("✅")
+
+                else:
+                    # Unknown :(
+                    await message.add_reaction("❌")
+            
+            # Rate Limit
+            elif args[0].lower() == "ratelimit":
+                Logger.log("ratelimit")
+                
+            elif args[0].lower() == "cli":
+                Logger.log("cli")
+            
+            elif args[0].lower() == "stop":
+                if str(message.author.id) == "668626305188757536":
+                    await client.close()
+
+            else:
+                await message.reply("Unknown Command")
+        
+            FManager.write("config.json", config)
 
 # Commands
 @client.tree.command(name=authorizeName, description=authorizeDescription)
@@ -111,7 +192,17 @@ FManager.setPath(progPath)
 whois.setPath(progPath)
 
 # Load config
-config.update(FManager.read("config.json"))
+data = FManager.read("config.json")
+if data == None:
+    Logger.err("No config.json file found. Please create one. Program will now exit")
+    sys.exit()
+
+config.update(data)
+
+# Load tokens
+data = FManager.read("tokens.json")
+if data != None:
+    oauthUsersTokens.update(FManager.read("tokens.json"))
 
 # Run the webserver
 WebServer.startWebSever()

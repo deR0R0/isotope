@@ -6,3 +6,4 @@ colorama
 thread6
 requests_oauthlib
 flask
+pillow

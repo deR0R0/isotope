@@ -6,6 +6,8 @@ import json
 from discord import app_commands
 from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont
+from oauthlib import oauth2
+from requests_oauthlib import OAuth2Session
 
 # Import Utilities
 sys.path.insert(1, sys.path[0].replace("commands", ""))
@@ -28,10 +30,13 @@ class whois:
     # Actual command
     @lru_cache
     @staticmethod
-    async def whois(interaction: discord.Interaction, originalResponse=None):
+    async def whois(interaction: discord.Interaction, user: discord.Member = None, originalResponse=None):
         global progPath
         # Log Command that was Ran
         Logger.log(f"{interaction.user} used /whois")
+
+        if user == None:
+            user = interaction.user
 
         # Loading...
         if originalResponse == None:
@@ -49,14 +54,14 @@ class whois:
             return
         
         # Check if they have connected or not
-        if str(interaction.user.id) not in oauthUsers or isinstance(oauthUsers[str(interaction.user.id)], str):
+        if str(user.id) not in oauthUsers or isinstance(oauthUsers[str(user.id)], str):
             await originalResponse.edit(embed=discordEmbedAccountNotConnected)
             return
         
         # Wrap in try catch statmeent
         try:
             # Request
-            profile = oauthUsers[str(interaction.user.id)].get("https://ion.tjhsst.edu/api/profile")
+            profile = oauthUsers[str(user.id)].get("https://ion.tjhsst.edu/api/profile")
             profile = json.loads(profile.content.decode())
 
             # Get the year they graduate
@@ -71,14 +76,24 @@ class whois:
             # Name Text
             imgDraw.text((20, 25), str(name), font=ImageFont.truetype(f"{progPath}/assets/Roboto-Medium.ttf", 35), fill=(0, 0, 0))
             # Save it
-            img.save(f"{progPath}/assets/{str(interaction.user.id)}.png")
+            img.save(f"{progPath}/assets/{str(user.id)}.png")
 
             # Now, we want to import the image as a discord.file
-            await originalResponse.edit(embed=None, content=f"Who Is <@{interaction.user.id}> ?")
-            await interaction.channel.send(file=discord.File(f"{progPath}/assets/{interaction.user.id}.png"))
+            await originalResponse.edit(embed=None, content=f"Who Is <@{user.id}> ?")
+            await interaction.channel.send(file=discord.File(f"{progPath}/assets/{user.id}.png"))
 
             # Delete the file
-            os.remove(f"{progPath}/assets/{interaction.user.id}.png")
+            os.remove(f"{progPath}/assets/{user.id}.png")
+        except oauth2.TokenExpiredError:
+            # Expired token, we will need to refresh and store it back into oauthUsersTokens
+            Logger.log(f"{user} has an expired token; refreshing now")
+            args = {"client_id": CLIENTID, "client_secret": OAUTHKEY}
+            token = OAuth2Session(client_id=CLIENTID, redirect_uri=oauthLink, scope="read").refresh_token("https://ion.tjhsst.edu/oauth/token", **args)
+            oauthUsersTokens[str(user.id)] = token
+            # Call myself
+            await whois.whois(interaction=interaction, user=user, originalResponse=originalResponse)
+
+
 
         except Exception as err:
             Logger.err(err)

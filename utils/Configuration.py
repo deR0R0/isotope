@@ -17,6 +17,7 @@ client = commands.Bot(command_prefix="/", description="description", intents=int
 
 # Oauth Stuff
 oauthUsers = {}
+oauthUsersTokens = {}
 oauthLink = "http://localhost:80/authorize"
 
 # Rate Limit Stuff
@@ -31,7 +32,7 @@ discordEmbedServerError = discord.Embed(title=":x: Server Error!", color=discord
 discordEmbedRateLimited = discord.Embed(title=":x: Rate Limited!", description="You've Been Rate Limited! 🙃", color=discord.Color.red())
 discordEmbedLoading = discord.Embed(title="<a:loadinggif:1278333115516850253> Loading...", color=discord.Color.blurple())
 discordEmbedAccountNotConnected = discord.Embed(title=":x: Ion Account Not Connected", description="Tip: Use the /authorize command to connect your Ion account!", color=discord.Color.red())
-discordEmbedConnectAccount = discord.Embed(title="Verify to continue", color=discord.Color.green())
+discordEmbedConnectAccount = discord.Embed(title="We'll Be Right Back! Making things much more useful!", color=discord.Color.green())
 discordEmbedCommandDisabled = discord.Embed(title=":x: Command Disabled!", color=discord.Color.red())
 discordEmbedAreYouSure = discord.Embed(title=":thinking: Are You Sure?", color=discord.Color.yellow())
 discordEmbedHaventEightSignups = discord.Embed(title=":x: You Haven't Signed Up For Eighth Yet!", color=discord.Color.red())
