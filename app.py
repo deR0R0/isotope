@@ -7,10 +7,7 @@ import os
 from utils.LogManager import Logger
 from utils.Configuration import *
 from utils.FileManager import FManager
-
-# Config
-oauthLink = "http://localhost:80/authorize"
-
+from utils.OauthManager import OManager
 
 app = Flask(__name__)
 
@@ -19,8 +16,6 @@ class WebServer:
     def startWebSever() -> None:
         t = threading.Thread(target=run)
         t.start()
-
-
 
 @app.route('/')
 def index():
@@ -34,34 +29,15 @@ def authorize():
     if len(request.args) == 0:
         return "Go to discord and click on the link"
     # Get auth code and token
-    try:
-        auth_code = request.args.get("code")
-        state = request.args.get("state")
-        Logger.serv(f"Recieved Get Request for {auth_code}")
-        oauth = OAuth2Session(client_id=CLIENTID, redirect_uri=oauthLink, scope="read")
-        token = oauth.fetch_token("https://ion.tjhsst.edu/oauth/token", code=auth_code, client_secret=OAUTHKEY)
-    except InvalidGrantError:
-        return {"Error": "Invalid Token, go back to discord!"}
-    except Exception as err:
-        Logger.err(err)
-        return "An Unexpected Error has occured! Ping @deroro_ with the follow: " + str(err)
-    
-    # Now match and set
-    oauthusersList = list(oauthUsers)
-    for i in range(len(oauthusersList)):
-        if oauthUsers[oauthusersList[i]] == state:
-            oauthUsers[oauthusersList[i]] = oauth
-            oauthUsersTokens[oauthusersList[i]] = token
-            Logger.serv("Successfully added user!")
+    auth_code = request.args.get("code")
+    state = request.args.get("state")
+    if OManager.linkOauth(authCode=auth_code, state=state):
+        pass
+    else:
+        return "Unknown Error"
 
-    oauthusersList = None
-    oauth = None
-    auth_code = None
-    state = None
-    # Write to File
-    FManager.write("tokens.json", oauthUsersTokens)
     # Return
-    return token
+    return "Successfully Connected, you now may close this page :)"
     #return render_template("./success/success.html")
 
 def run():

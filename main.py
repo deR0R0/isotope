@@ -2,6 +2,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+import typing
 # System
 import os
 import sys
@@ -34,6 +35,8 @@ from app import WebServer
 from commands.Authorize import authorize
 from commands.Deauthorize import deauthorize
 from commands.WhoIs import whois
+from commands.About import about
+from commands.settings.Privacy import privacy
 
 # Import Tasks
 from tasks.detectVerified import DetectVerified
@@ -50,7 +53,7 @@ class AuthorizeIon(discord.ui.View):
     async def authenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
         Logger.cmd(f"{interaction.user} pressed Authenticate button!")
         await authorize.authorize(interaction)
-
+os.system("clear")
 
 # Client Events
 
@@ -65,10 +68,13 @@ async def on_ready():
     # Delete Previous Buttons
     for server in list(config["serverConfigs"].keys()):
         if config["serverConfigs"][server]["authorizeButton"] != None:
-            # Fetch channel and message, then delete
-            channel: discord.TextChannel = await client.fetch_channel(config["serverConfigs"][server]["authorizeButton"][0])
-            message = await channel.fetch_message(config["serverConfigs"][server]["authorizeButton"][1])
-            await message.delete()
+            try:
+                # Fetch channel and message, then delete
+                channel: discord.TextChannel = await client.fetch_channel(config["serverConfigs"][server]["authorizeButton"][0])
+                message = await channel.fetch_message(config["serverConfigs"][server]["authorizeButton"][1])
+                await message.delete()
+            except Exception:
+                pass
 
             # Send new buttons :)
             channel: discord.TextChannel = await client.fetch_channel(config["serverConfigs"][server]["authorizeChannel"])
@@ -88,6 +94,9 @@ async def on_ready():
     else:
         Logger.warn("Missing Tokens")
 
+    # Load user settings
+    userSettings.update(FManager.read("userPreferences.json"))
+
 
     try:
         await taskLoop.start()
@@ -101,6 +110,11 @@ async def on_ready():
 async def on_message(message: discord.Message):
     global program_path
     global config
+
+    # Fun responses :D
+    if message.content.lower() == "<@1277278355036700843>":
+        responses = ["beep boop", "beep boop?", "boop beep", "beep boop ^_^"]
+        await message.reply(random.choice(responses))
 
     if message.content.startswith(">isotope"):
         if str(message.author.id) in config["approvedCLIUsers"]:
@@ -119,6 +133,7 @@ async def on_message(message: discord.Message):
             elif args[0].lower() == "config":
                 Logger.log(f"Giving config to {message.author}")
                 await message.reply(file=discord.File(f"{progPath}/data/config.json"))
+
             
             # Logs
             elif args[0].lower() == "logs":
@@ -141,7 +156,7 @@ async def on_message(message: discord.Message):
                     
                     # Log it
                     Logger.log(msg)
-                    await message.reply(f'Added "{msg}" to logs')
+                    await message.reply(f'Added ```{msg}``` to logs')
                 elif args[1].lower() == "clear":
                     # Clear the logs
                     FManager.write("logs.txt", "")
@@ -153,7 +168,47 @@ async def on_message(message: discord.Message):
             
             # Rate Limit
             elif args[0].lower() == "ratelimit":
-                Logger.log("ratelimit")
+                # Check enough args
+                if len(args) == 1:
+                    await message.reply("Require more args! ```[trigger / delay] [seconds]```")
+                    return
+                # Trigger rate limit
+                if args[1] == "trigger":
+                    try:
+                        config["messagesTriggerLimit"] = args[2]
+                        await message.add_reaction("✅")
+                    except:
+                        await message.add_reaction("❌")
+                elif args[1] == "delay":
+                    try:
+                        config["removeRateLimitTime"] = args[2]
+                        await message.add_reaction("✅")
+                    except:
+                        await message.add_reaction("❌")
+                else:
+                    await message.reply(f"Invalid Syntax: {args[1]}")
+
+            # Disable Commands
+            elif args[0].lower() == "command":
+                try:
+                    config["enabledCommands"][args[1]] = args[2] == "true"
+                except:
+                    await message.add_reaction("❌")
+                
+            elif args[0].lower() == "nuke":
+                messagesToDelete = []
+                for i in range(10):
+                    messagesToDelete.append(await message.channel.send(f"{10-i}"))
+                    await asyncio.sleep(1)
+
+                for i in range(10):
+                    messagesToDelete.append(await message.channel.send(f"# NUKED BY ISOTOPE, L GET BETTER"))
+
+                for i in messagesToDelete:
+                    await i.delete()
+                    await asyncio.sleep(0.5)
+
+                
                 
             elif args[0].lower() == "cli":
                 Logger.log("cli")
@@ -177,8 +232,27 @@ async def mainDeauthorize(interaction: discord.Interaction):
     await deauthorize.deauthorize(interaction)
 
 @client.tree.command(name=whoisName, description=whoisDescription)
-async def mainWhoIs(interaction: discord.Interaction):
-    await whois.whois(interaction)
+async def mainWhoIs(interaction: discord.Interaction, user: discord.Member = None):
+    await whois.whois(interaction, user)
+
+@client.tree.command(name=aboutName, description=aboutDescription)
+async def mainAbout(interaction: discord.Interaction):
+    await about.about(interaction)
+
+@settingsGroup.command(name=settings_PrivacyName, description=settings_PrivacyDescription)
+@app_commands.describe(value="Set your privacy to public or private")
+async def mainSettingsPrivacy(interaction: discord.Interaction, value: str):
+    await privacy.privacy(interaction, value)
+
+@lru_cache
+@mainSettingsPrivacy.autocomplete("value")
+async def mainSettingsPrivacyAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+    choices = []
+    for choice in ["public", "private"]:
+        if current.lower() in choice:
+            choices.append(app_commands.Choice(name=choice, value=choice))
+
+    return choices
 
 # Tasks
 @tasks.loop(seconds=3)
@@ -202,7 +276,12 @@ config.update(data)
 # Load tokens
 data = FManager.read("tokens.json")
 if data != None:
-    oauthUsersTokens.update(FManager.read("tokens.json"))
+    oauthUsersTokens.update(data)
+
+# Load Money
+money = FManager.read("userMoney.json")
+if money != None:
+    userMoney.update(money)
 
 # Run the webserver
 WebServer.startWebSever()

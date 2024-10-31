@@ -4,10 +4,9 @@ import os
 import discord
 import json
 from discord import app_commands
-from functools import lru_cache
 from PIL import Image, ImageDraw, ImageFont
-from oauthlib import oauth2
-from requests_oauthlib import OAuth2Session
+from oauthlib.oauth2 import TokenExpiredError, InvalidGrantError
+from requests_oauthlib import OAuth2Session, oauth2_auth
 
 # Import Utilities
 sys.path.insert(1, sys.path[0].replace("commands", ""))
@@ -15,6 +14,8 @@ from utils.Configuration import *
 from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
+from utils.SettingsManager import SManager
+from utils.OauthManager import OManager
 
 progPath = ""
 
@@ -28,16 +29,12 @@ class whois:
         progPath = path
 
     # Actual command
-    @lru_cache
     @staticmethod
     async def whois(interaction: discord.Interaction, user: discord.Member = None, originalResponse=None):
         global progPath
         # Log Command that was Ran
         Logger.log(f"{interaction.user} used /whois")
-
-        if user == None:
-            user = interaction.user
-
+                        
         # Loading...
         if originalResponse == None:
             await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=False)
@@ -46,6 +43,7 @@ class whois:
         # Check if command is enabled or not
         if not config["enabledCommands"]["whois"]:
             await originalResponse.edit(embed=discordEmbedCommandDisabled)
+            return
 
         # Rate Limiter
         if RateLimit.addUser(interaction.user.id):
@@ -54,8 +52,14 @@ class whois:
             return
         
         # Check if they have connected or not
-        if str(user.id) not in oauthUsers or isinstance(oauthUsers[str(user.id)], str):
+        if not OManager.checkOauthSession(user.id):
             await originalResponse.edit(embed=discordEmbedAccountNotConnected)
+            return
+        
+        # Check if they are private or not
+        if not SManager.checkPrivacy(user.id):
+            discordEmbedAccountPrivate.title = f":x: **__{user.display_name}__**'s Account is ```Private```!"
+            await originalResponse.edit(embed=discordEmbedAccountPrivate)
             return
         
         # Wrap in try catch statmeent
@@ -63,6 +67,11 @@ class whois:
             # Request
             profile = oauthUsers[str(user.id)].get("https://ion.tjhsst.edu/api/profile")
             profile = json.loads(profile.content.decode())
+
+            if "detail" in profile:
+                OManager.deleteUser(user.id)
+                await originalResponse.edit(embed=discordEmbedAccountNotConnected)
+                return
 
             # Get the year they graduate
             name = profile["full_name"]
@@ -84,16 +93,18 @@ class whois:
 
             # Delete the file
             os.remove(f"{progPath}/assets/{user.id}.png")
-        except oauth2.TokenExpiredError:
-            # Expired token, we will need to refresh and store it back into oauthUsersTokens
-            Logger.log(f"{user} has an expired token; refreshing now")
-            args = {"client_id": CLIENTID, "client_secret": OAUTHKEY}
-            token = OAuth2Session(client_id=CLIENTID, redirect_uri=oauthLink, scope="read").refresh_token("https://ion.tjhsst.edu/oauth/token", **args)
-            oauthUsersTokens[str(user.id)] = token
-            # Call myself
-            await whois.whois(interaction=interaction, user=user, originalResponse=originalResponse)
 
-
+        except TokenExpiredError:
+            response = OManager.refreshUserToken(user.id)
+            if response == "invalidToken":
+                await originalResponse.edit(embed=discordEmbedAccountNotConnected)
+                return
+            elif response == "unknownException":
+                await originalResponse.edit(embed=discordEmbedInternalError)
+                return
+            else:
+                Logger.log(f"Successfully Refreshed {user}'s Token!")
+                await whois.whois(interaction, user, originalResponse)
 
         except Exception as err:
             Logger.err(err)

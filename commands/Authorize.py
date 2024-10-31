@@ -1,10 +1,8 @@
-
 import sys
 import os
 import discord
 from discord import app_commands
 from requests_oauthlib import OAuth2Session
-from functools import lru_cache
 
 # Import Utilities
 sys.path.insert(1, sys.path[0].replace("commands", ""))
@@ -12,12 +10,12 @@ from utils.Configuration import *
 from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
+from utils.OauthManager import OManager
 
 # Create the command class
 class authorize:
 
     # Actual command
-    @lru_cache
     @staticmethod
     async def authorize(interaction: discord.Interaction, originalResponse=None):
 
@@ -32,6 +30,7 @@ class authorize:
         # Check if command is enabled or not
         if not config["enabledCommands"]["authorize"]:
             await originalResponse.edit(embed=discordEmbedCommandDisabled)
+            return
 
         # Rate Limiter
         if RateLimit.addUser(interaction.user.id):
@@ -40,10 +39,9 @@ class authorize:
             return
         
         # Check if they already connected or not
-        if str(interaction.user.id) in oauthUsers:
-            if not isinstance(oauthUsers[str(interaction.user.id)], str):
-                await originalResponse.edit(embed=discord.Embed(title=":x: Already Connected!", color=discord.Color.red()))
-                return
+        if OManager.checkOauthSession(interaction.user.id):
+            await originalResponse.edit(embed=discord.Embed(title=":x: Already Connected", color=discord.Color.red()))
+            return
         
         # Wrap in try catch statmeent
         try:
