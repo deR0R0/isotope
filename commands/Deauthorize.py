@@ -12,6 +12,7 @@ from utils.Configuration import *
 from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
+from utils.OauthManager import OManager
 
 # ConfirmDeletion
 class ConfirmDeletion(discord.ui.View):
@@ -24,18 +25,28 @@ class ConfirmDeletion(discord.ui.View):
     async def authenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Check if this is their button
         if self.userId != interaction.user.id:
-            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton)
+            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton, ephemeral=True)
             return
         
         # Call the actual deletion
         Logger.cmd(f"{interaction.user} pressed Confirm Deletion button!")
         await deauthorize.deleteAccount(interaction, self.msg)
 
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
+    async def deauthenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # CHeck if this is their button
+        if self.userId != interaction.user.id:
+            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton, ephemeral=True)
+            return
+        
+        # Remove this message
+        await interaction.response.send_message(embed=discord.Embed(title=":x: Canceled!", color=discord.Color.red()), ephemeral=True)
+        await self.msg.delete()
+
 # Create the command class
 class deauthorize:
 
     # Actual command
-    @lru_cache
     @staticmethod
     async def deauthorize(interaction: discord.Interaction, originalResponse=None):
 
@@ -73,7 +84,6 @@ class deauthorize:
             
        
     # Deletion Background Task
-    @lru_cache
     @staticmethod
     async def deleteAccount(interaction: discord.Interaction, message: discord.Message, originalResponse = None):
         
@@ -91,6 +101,7 @@ class deauthorize:
         # Check if command is enabled or not
         if not config["enabledCommands"]["deauthorize"]:
             await originalResponse.edit(embed=discordEmbedCommandDisabled)
+            return
 
         # Rate Limiter
         if RateLimit.addUser(interaction.user.id):
@@ -101,8 +112,10 @@ class deauthorize:
         # Wrap in try catch statmeent
         try:
 
-            # Delete the key
-            del oauthUsers[str(interaction.user.id)]
+            # Delete the key from session
+            OManager.deleteUser(interaction.user.id)
+            # Save the tokens
+            FManager.write("tokens.json", oauthUsersTokens)
 
         except Exception as err:
             Logger.err(err)

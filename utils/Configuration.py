@@ -26,17 +26,34 @@ rateLimitUsers = {}
 # Config
 config = {}
 
+# User Preferences
+userSettings = {}
+defaultUserSettings = {
+    "privacy": "private"
+}
+
+settingOptions = {
+    "privacy": ["private", "public"]
+}
+
+# User Currency Stuff
+userMoney = {}
+
 # Discord Embeds
 discordEmbedInternalError = discord.Embed(title=":x: Internal Error!", color=discord.Color.red())
 discordEmbedServerError = discord.Embed(title=":x: Server Error!", color=discord.Color.red())
 discordEmbedRateLimited = discord.Embed(title=":x: Rate Limited!", description="You've Been Rate Limited! 🙃", color=discord.Color.red())
 discordEmbedLoading = discord.Embed(title="<a:loadinggif:1278333115516850253> Loading...", color=discord.Color.blurple())
 discordEmbedAccountNotConnected = discord.Embed(title=":x: Ion Account Not Connected", description="Tip: Use the /authorize command to connect your Ion account!", color=discord.Color.red())
-discordEmbedConnectAccount = discord.Embed(title="We'll Be Right Back! Making things much more useful!", color=discord.Color.green())
+discordEmbedConnectAccount = discord.Embed(title="Developing Mode... Check back later!", color=discord.Color.green())
 discordEmbedCommandDisabled = discord.Embed(title=":x: Command Disabled!", color=discord.Color.red())
 discordEmbedAreYouSure = discord.Embed(title=":thinking: Are You Sure?", color=discord.Color.yellow())
 discordEmbedHaventEightSignups = discord.Embed(title=":x: You Haven't Signed Up For Eighth Yet!", color=discord.Color.red())
 discordEmbedThisIsNotYourButton = discord.Embed(title=":x: This Is Not Your Button!", color=discord.Color.red())
+discordEmbedReauthorizePlease = discord.Embed(title=":x: Invalid Token, please reauthorize!", color=discord.Color.red())
+discordEmbedSuccessfullyChangedSetting = discord.Embed(title=":white_check_mark: Successfully Changed Setting To ", color=discord.Color.green())
+discordEmbedUnknownSettingOption = discord.Embed(title=":x: Unknown Setting Option", color=discord.Color.red())
+discordEmbedAccountPrivate = discord.Embed(title=":x: User's Account is Private", color=discord.Color.red())
 
 
 # Command Names and Descriptions
@@ -48,3 +65,15 @@ deauthorizeDescription = "Unlink your TJHSST ion account from your discord accou
 
 whoisName = "whois"
 whoisDescription = "Find out who is the person you ping. (by the user's consent!)"
+
+aboutName = "about"
+aboutDescription = "About this bot, has some interesting information"
+
+settings_PrivacyName = "privacy"
+settings_PrivacyDescription = "Set your privacy settings to public or private"
+
+
+
+# Command Groups
+settingsGroup = app_commands.Group(name="settings", description="Settings Group")
+client.tree.add_command(settingsGroup)
