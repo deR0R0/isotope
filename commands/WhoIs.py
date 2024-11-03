@@ -96,7 +96,7 @@ class whois:
 
 
             # Now, we want to import the image as a discord.file
-            await originalResponse.edit(embed=discord.Embed(title=f":question: Who Is __{user.display_name}__!", color=discord.Color.green()))
+            await originalResponse.edit(embed=discord.Embed(title=f":question: Who Is __{user.display_name}__?", color=discord.Color.yellow()))
             await interaction.followup.send(file=discord.File(f"{progPath}/data/{user.id}.png"))
 
             # Delete the file

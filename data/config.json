@@ -13,7 +13,9 @@
         "deauthorize": true,
         "whois": true,
         "about": true,
-        "settings_privacy": true
+        "settings_view": true,
+        "settings_privacy": true,
+        "currency_daily": true
     },
     "serverConfigs": {
         "1240269361659383920": {
@@ -21,7 +23,7 @@
             "authorizeChannel": "1285636266821419029",
             "authorizeButton": [
                 1285636266821419029,
-                1302674737817980949
+                1302747641003642953
             ]
         }
     }

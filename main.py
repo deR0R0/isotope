@@ -38,6 +38,7 @@ from commands.WhoIs import whois
 from commands.About import about
 from commands.settings.View import view
 from commands.settings.Privacy import privacy
+from commands.currency.Daily import daily
 
 # Import Tasks
 from tasks.detectVerified import DetectVerified
@@ -240,6 +241,7 @@ async def mainWhoIs(interaction: discord.Interaction, user: discord.Member = Non
 async def mainAbout(interaction: discord.Interaction):
     await about.about(interaction)
 
+# Settings Commands
 @settingsGroup.command(name=settings_ViewName, description=settings_ViewDescription)
 async def mainSettings(interaction: discord.Interaction):
     await view.view(interaction)
@@ -248,6 +250,11 @@ async def mainSettings(interaction: discord.Interaction):
 @app_commands.describe(value="Set your privacy to public or private")
 async def mainSettingsPrivacy(interaction: discord.Interaction, value: str):
     await privacy.privacy(interaction, value)
+
+# Currency Commands
+@currencyGroup.command(name="daily", description="Every 24 hours you can claim 100 IQ")
+async def mainCurrencyDaily(interaction: discord.Interaction):
+    await daily.daily(interaction)
 
 @lru_cache
 @mainSettingsPrivacy.autocomplete("value")

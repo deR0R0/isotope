@@ -1,30 +1,32 @@
+# Imports
 import sys
 import os
 import discord
 import json
 from discord import app_commands
+from PIL import Image, ImageDraw, ImageFont
+from oauthlib.oauth2 import TokenExpiredError, InvalidGrantError
+from requests_oauthlib import OAuth2Session, oauth2_auth
 
 # Import Utilities
-sys.path.insert(1, sys.path[0].replace("commands/settings", ""))
+sys.path.insert(1, sys.path[0].replace("commands/currency", ""))
 from utils.Configuration import *
 from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
 from utils.SettingsManager import SManager
-from utils.OauthManager import OManager
+from utils.CurrencyManager import CManager
 
-class view:
+class daily:
     @staticmethod
-    async def view(interaction: discord.Interaction, originalResponse = None):
-        Logger.cmd(f"{interaction.user} used /settings view")
-
-        # Loading...
+    async def daily(interaction: discord.Interaction, originalResponse = None):
+        # Send loading
         if originalResponse == None:
             await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=False)
             originalResponse = await interaction.original_response()
         
         # Check if command is enabled or not
-        if not config["enabledCommands"]["settings_view"]:
+        if not config["enabledCommands"]["currency_daily"]:
             await originalResponse.edit(embed=discordEmbedCommandDisabled)
             return
 
@@ -35,16 +37,13 @@ class view:
             return
         
         try:
-            settings = SManager.getSettings(interaction.user.id)
+            response = CManager.claimDailyReward(interaction.user.id)
 
-            userSettingEmbed = discord.Embed(title=f"__{interaction.user.display_name}__'s Settings", color=interaction.user.color)
-            for setting in settings.keys():
-                settingValue = settings[setting]
-                userSettingEmbed.add_field(name=f"{setting} (```{settingValue}```)", value=f"{settingsDescriptions[setting]}")
-
-            await originalResponse.edit(embed=userSettingEmbed)
+            if response.isnumeric():
+                await originalResponse.edit(embed=discord.Embed(title=f":x: Already Claimed Daily!", description=f"Please wait <t:{response}:R> to claim again!", color=discord.Color.red()))
+                return
+            
+            await originalResponse.edit(embed=discordEmbedClaimedIQ)
         except Exception as err:
             Logger.err(err)
             await originalResponse.edit(embed=discordEmbedInternalError)
-
-        

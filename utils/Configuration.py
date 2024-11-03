@@ -61,6 +61,7 @@ discordEmbedReauthorizePlease = discord.Embed(title=":x: Invalid Token, please r
 discordEmbedSuccessfullyChangedSetting = discord.Embed(title=":white_check_mark: Successfully Changed Setting To ", color=discord.Color.green())
 discordEmbedUnknownSettingOption = discord.Embed(title=":x: Unknown Setting Option", color=discord.Color.red())
 discordEmbedAccountPrivate = discord.Embed(title=":x: User's Account is Private", color=discord.Color.red())
+discordEmbedClaimedIQ = discord.Embed(title=":white_check_mark: Claimed 100 IQ!", color=discord.Color.green())
 
 
 # Command Names and Descriptions
@@ -87,3 +88,6 @@ settings_PrivacyDescription = "Set your privacy settings to public or private"
 # Command Groups
 settingsGroup = app_commands.Group(name="settings", description="Settings Group")
 client.tree.add_command(settingsGroup)
+
+currencyGroup = app_commands.Group(name="currency", description="Currency Group")
+client.tree.add_command(currencyGroup)
