@@ -22,13 +22,19 @@ class SManager:
         FManager.write("userPreferences.json", userSettings)
         
         return True
+    
+    @staticmethod
+    def checkUserExist(userId: int) -> bool:
+        if str(userId) not in userSettings:
+            return False
+        
+        return True
 
 
     @staticmethod
     def changeSetting(userId: int, setting: str, value: str) -> str:
         # Check if they are in the settings
-        if userId not in userSettings:
-            # Create them
+        if not SManager.checkUserExist(userId):
             SManager.createUser(userId)
 
         if setting not in userSettings[str(userId)]:
@@ -56,10 +62,42 @@ class SManager:
                 return False
             
             userSettings[str(userId)][setting] = defaultUserSettings[setting]
-            return True
         except Exception as err:
             Logger.warn(err)
             return False
+        
+        Logger.log(f"Added missing setting for {userId}")
+        return True
+        
+    @staticmethod
+    def handleExtraSetting(userId: int, setting: str) -> bool:
+        try:
+            del userSettings[str(userId)][setting]
+        except Exception as err:
+            Logger.warn(err)
+            return False
+        Logger.log(f"Removed extra setting for {userId}")
+        return True
+        
+    @staticmethod
+    def updateAllSettings(userId: int) -> bool:
+        if not SManager.checkUserExist(userId):
+            SManager.createUser(userId)
+
+        # Check for missing settings
+        for setting in settingOptions.keys():
+            if setting not in userSettings[str(userId)]:
+                SManager.handleMissingSetting(userId, setting)
+
+        # Check for extra settings
+        for setting in userSettings[str(userId)]:
+            if setting not in settingOptions:
+                SManager.handleExtraSetting(userId, setting)
+
+        return True
+
+
+
 
 
     @staticmethod
@@ -75,10 +113,19 @@ class SManager:
 
     @staticmethod
     def checkPrivacy(userId: int) -> bool:
-        if str(userId) not in userSettings:
+        if not SManager.checkUserExist(userId):
             SManager.createUser(userId)
 
         if userSettings[str(userId)]["privacy"].lower() == "private":
             return False
         else:
             return True
+        
+    @staticmethod
+    def getSettings(userId: int) -> dict:
+        # This is to check if user has all updated settings
+        if not SManager.updateAllSettings(userId):
+            Logger.warn("There was an error while updating someone's settings")
+            return {"error": "Error"}
+
+        return userSettings[str(userId)]

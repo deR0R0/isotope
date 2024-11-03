@@ -18,7 +18,12 @@ Misc Features:
 
 ### Self-Hosting
 
-1. Go to the directory you would like to store this bot
-2. Do ```git clone https://github.com/deR0R0/isotope.git```
-3. Now ```cd isotope``` to go into the folder
-4. Run ```python main.py``` if you're on linux, ```python3 main.py``` if you're on mac/windows.
+(assuming you've already installed python)
+
+1. Create a Folder (any name)
+2. Install [git](https://git-scm.com/downloads)
+3. Navigate to your folder and spawn a terminal
+4. Use ```git clone https://github.com/deR0R0/isotope.git```
+5. Now ```cd isotope``` to go into the folder
+6. Run ```python -m pip install requirements.txt``` to download the required libraries
+7. Finally, run ```python main.py``` or ```python3 main.py``` depending on the version of python you have

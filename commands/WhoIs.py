@@ -33,7 +33,10 @@ class whois:
     async def whois(interaction: discord.Interaction, user: discord.Member = None, originalResponse=None):
         global progPath
         # Log Command that was Ran
-        Logger.log(f"{interaction.user} used /whois")
+        Logger.cmd(f"{interaction.user} used /whois")
+
+        if user == None:
+            user = interaction.user
                         
         # Loading...
         if originalResponse == None:
@@ -85,14 +88,19 @@ class whois:
             # Name Text
             imgDraw.text((20, 25), str(name), font=ImageFont.truetype(f"{progPath}/assets/Roboto-Medium.ttf", 35), fill=(0, 0, 0))
             # Save it
-            img.save(f"{progPath}/assets/{str(user.id)}.png")
+            img.save(f"{progPath}/data/{str(user.id)}.png")
+
+            # Create embed
+            imageEmbed = discord.Embed(title=f"Who Is __{user}__?")
+            imageEmbed.set_image(url=f"attachment://{progPath}/data/{user.id}.png")
+
 
             # Now, we want to import the image as a discord.file
-            await originalResponse.edit(embed=None, content=f"Who Is <@{user.id}> ?")
-            await interaction.channel.send(file=discord.File(f"{progPath}/assets/{user.id}.png"))
+            await originalResponse.edit(embed=discord.Embed(title=f":question: Who Is __{user.display_name}__!", color=discord.Color.green()))
+            await interaction.followup.send(file=discord.File(f"{progPath}/data/{user.id}.png"))
 
             # Delete the file
-            os.remove(f"{progPath}/assets/{user.id}.png")
+            os.remove(f"{progPath}/data/{user.id}.png")
 
         except TokenExpiredError:
             response = OManager.refreshUserToken(user.id)

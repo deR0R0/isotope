@@ -36,8 +36,15 @@ settingOptions = {
     "privacy": ["private", "public"]
 }
 
+settingsDescriptions = {
+    "privacy": "People cannot see your personal information when private"
+}
+
 # User Currency Stuff
 userMoney = {}
+defaultUserMoney = {
+    "money": 0
+}
 
 # Discord Embeds
 discordEmbedInternalError = discord.Embed(title=":x: Internal Error!", color=discord.Color.red())
@@ -68,6 +75,9 @@ whoisDescription = "Find out who is the person you ping. (by the user's consent!
 
 aboutName = "about"
 aboutDescription = "About this bot, has some interesting information"
+
+settings_ViewName = "view"
+settings_ViewDescription = "View your user settings"
 
 settings_PrivacyName = "privacy"
 settings_PrivacyDescription = "Set your privacy settings to public or private"

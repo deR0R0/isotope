@@ -36,6 +36,7 @@ from commands.Authorize import authorize
 from commands.Deauthorize import deauthorize
 from commands.WhoIs import whois
 from commands.About import about
+from commands.settings.View import view
 from commands.settings.Privacy import privacy
 
 # Import Tasks
@@ -238,6 +239,10 @@ async def mainWhoIs(interaction: discord.Interaction, user: discord.Member = Non
 @client.tree.command(name=aboutName, description=aboutDescription)
 async def mainAbout(interaction: discord.Interaction):
     await about.about(interaction)
+
+@settingsGroup.command(name=settings_ViewName, description=settings_ViewDescription)
+async def mainSettings(interaction: discord.Interaction):
+    await view.view(interaction)
 
 @settingsGroup.command(name=settings_PrivacyName, description=settings_PrivacyDescription)
 @app_commands.describe(value="Set your privacy to public or private")
