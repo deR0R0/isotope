@@ -26,6 +26,14 @@ class CManager:
         if str(userId) not in userMoney:
             CManager.createUser(userId)
 
+    @staticmethod
+    def updateMissingFields(userId: int) -> None:
+        CManager.checkUserHasAccount(userId)
+
+        for field in defaultUserMoney.keys():
+            if field not in userMoney[str(userId)]:
+                userMoney[str(userId)][field] = defaultUserMoney[field]
+
     
     @staticmethod
     def addMoney(userId: int, iq: int) -> bool:
@@ -51,9 +59,17 @@ class CManager:
     
 
     @staticmethod
-    def getMoney(userId: int) -> int:
+    def getMoney(userId: int) -> list:
         CManager.checkUserHasAccount(userId)
-        return userMoney[str(userId)]["money"]
+        CManager.updateMissingFields(userId)
+        return [userMoney[str(userId)]["money"], userMoney[str(userId)]["bank"]]
+    
+    @staticmethod
+    def removeUser(userId: int) -> bool:
+        CManager.checkUserHasAccount(userId)
+        del userMoney[str(userId)]
+        CManager.save()
+        return True
     
 
     # Now we can make the methods that do stuff
@@ -61,7 +77,7 @@ class CManager:
     def claimDailyReward(userId: int) -> str:
         CManager.checkUserHasAccount(userId)
         if "lastClaimedDaily" in userMoney[str(userId)]:
-            if int(userMoney[str(userId)]["lastClaimedDaily"]) < int(time.time()):
+            if int(time.time()) < (int(userMoney[str(userId)]["lastClaimedDaily"]) + 86400):
                 # (lastClaimedDaily + milliseconds in 24 hours) - (current time milliseconds)
                 return str((int(userMoney[str(userId)]["lastClaimedDaily"]) + 86400))
             

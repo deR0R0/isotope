@@ -13,6 +13,8 @@ from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
 from utils.OauthManager import OManager
+from utils.CurrencyManager import CManager
+from utils.SettingsManager import SManager
 
 # ConfirmDeletion
 class ConfirmDeletion(discord.ui.View):
@@ -30,7 +32,7 @@ class ConfirmDeletion(discord.ui.View):
         
         # Call the actual deletion
         Logger.cmd(f"{interaction.user} pressed Confirm Deletion button!")
-        await deauthorize.deleteAccount(interaction, self.msg)
+        await deauthorize.deleteAccount(interaction, self.msg, False)
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
     async def deauthenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -42,6 +44,17 @@ class ConfirmDeletion(discord.ui.View):
         # Remove this message
         await interaction.response.send_message(embed=discord.Embed(title=":x: Canceled!", color=discord.Color.red()), ephemeral=True)
         await self.msg.delete()
+
+    @discord.ui.button(label="Only My Ion", style=discord.ButtonStyle.gray)
+    async def onlymyion(self, interaction: discord.Interaction, button: discord.ui.button):
+        # Check if this is their button
+        if self.userId != interaction.user.id:
+            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton, ephemeral=True)
+            return
+        
+        # Call Only Ion deletion
+        Logger.cmd(f"{interaction.user} pressed Only My Ion button!")
+        await deauthorize.deleteAccount(interaction, self.msg, True)
 
 # Create the command class
 class deauthorize:
@@ -85,7 +98,7 @@ class deauthorize:
        
     # Deletion Background Task
     @staticmethod
-    async def deleteAccount(interaction: discord.Interaction, message: discord.Message, originalResponse = None):
+    async def deleteAccount(interaction: discord.Interaction, message: discord.Message, ionOnly: bool, originalResponse = None):
         
         # Log Command that was Ran
         Logger.log(f"{interaction.user} is deauthorizing their account!")
@@ -111,9 +124,16 @@ class deauthorize:
         
         # Wrap in try catch statmeent
         try:
+            if ionOnly:
+                OManager.deleteUser(interaction.user.id)
+            else:
+                OManager.deleteUser(interaction.user.id)
+                CManager.removeUser(interaction.user.id)
+                SManager.removeUser(interaction.user.id)
 
-            # Delete the key from session
-            OManager.deleteUser(interaction.user.id)
+            # Its all gone now
+
+
             # Save the tokens
             FManager.write("tokens.json", oauthUsersTokens)
 

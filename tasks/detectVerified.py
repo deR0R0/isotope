@@ -16,6 +16,7 @@ from utils.Configuration import *
 from utils.FileManager import FManager
 from utils.LogManager import Logger
 from utils.RateLimiter import RateLimit
+from utils.SettingsManager import SManager
 
 
 
@@ -63,7 +64,8 @@ class DetectVerified:
                                                 return
                     
                             # Once added role, we want to tell them they're verified
-                            await discordUser.send(embed=discord.Embed(title=":white_check_mark: Authenticated!", color=discord.Color.green()))
+                            if SManager.checkAllowDMs(discordUser.id):
+                                await discordUser.send(embed=discord.Embed(title=f":white_check_mark: Authenticated!", color=discord.Color.green()))
                             Logger.log(f"Successfully verified {discordUser.name}")
 
 

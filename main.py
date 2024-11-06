@@ -6,12 +6,8 @@ import typing
 # System
 import os
 import sys
-import pathlib
-import json
-import threading
 import random
 # Networking and Oauth
-import requests
 from requests_oauthlib import OAuth2Session
 from flask import render_template, Flask, request
 from oauthlib import oauth2
@@ -38,7 +34,9 @@ from commands.WhoIs import whois
 from commands.About import about
 from commands.settings.View import view
 from commands.settings.Privacy import privacy
+from commands.settings.AllowDMs import allowdms
 from commands.currency.Daily import daily
+from commands.currency.Balance import balance
 
 # Import Tasks
 from tasks.detectVerified import DetectVerified
@@ -115,8 +113,9 @@ async def on_message(message: discord.Message):
 
     # Fun responses :D
     if message.content.lower() == "<@1277278355036700843>":
-        responses = ["beep boop", "beep boop?", "boop beep", "beep boop ^_^"]
-        await message.reply(random.choice(responses))
+        if not RateLimit.addUser(message.author.id):
+            responses = ["beep boop", "beep boop?", "boop beep", "beep boop ^_^"]
+            await message.reply(random.choice(responses))
 
     if message.content.startswith(">isotope"):
         if str(message.author.id) in config["approvedCLIUsers"]:
@@ -187,6 +186,11 @@ async def on_message(message: discord.Message):
                         await message.add_reaction("✅")
                     except:
                         await message.add_reaction("❌")
+                elif args[1] == "users":
+                    embed = discord.Embed(title="Rate Limited Users")
+                    for user in rateLimitUsers:
+                        embed.add_field(name=f"{user}", value=f"Strikes: {rateLimitUsers[user]}")
+                    await message.reply(embed=embed)
                 else:
                     await message.reply(f"Invalid Syntax: {args[1]}")
 
@@ -251,17 +255,37 @@ async def mainSettings(interaction: discord.Interaction):
 async def mainSettingsPrivacy(interaction: discord.Interaction, value: str):
     await privacy.privacy(interaction, value)
 
+@settingsGroup.command(name=settings_AllowDMsName, description=settings_AllowDMsDescription)
+@app_commands.describe(value="Allow or not the bot to send you dms. True/False")
+async def mainSettingsAllowDMs(interaction: discord.Interaction, value: str):
+    await allowdms.allowdms(interaction, value)
+
+
 # Currency Commands
 @currencyGroup.command(name="daily", description="Every 24 hours you can claim 100 IQ")
 async def mainCurrencyDaily(interaction: discord.Interaction):
     await daily.daily(interaction)
 
+@currencyGroup.command(name="balance", description="See your balance")
+async def mainCurrencyBalance(interaction: discord.Interaction):
+    await balance.balance(interaction)
+
 @lru_cache
 @mainSettingsPrivacy.autocomplete("value")
 async def mainSettingsPrivacyAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     choices = []
-    for choice in ["public", "private"]:
-        if current.lower() in choice:
+    for choice in settingOptions["privacy"]:
+        if current.lower() in choice.lower():
+            choices.append(app_commands.Choice(name=choice, value=choice))
+
+    return choices
+
+@lru_cache
+@mainSettingsAllowDMs.autocomplete("value")
+async def mainSettingsAllowDMsAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+    choices = []
+    for choice in settingOptions["allowDMs"]:
+        if current.lower() in choice.lower():
             choices.append(app_commands.Choice(name=choice, value=choice))
 
     return choices

@@ -12,6 +12,10 @@ from functools import lru_cache
 class SManager:
 
     @staticmethod
+    def save():
+        FManager.write("userPreferences.json", userSettings)
+
+    @staticmethod
     def createUser(userId: int) -> bool:
         try:
             userSettings[str(userId)] = defaultUserSettings
@@ -19,7 +23,7 @@ class SManager:
             Logger.warn(err)
             return False
         
-        FManager.write("userPreferences.json", userSettings)
+        SManager.save()
         
         return True
     
@@ -32,7 +36,7 @@ class SManager:
 
 
     @staticmethod
-    def changeSetting(userId: int, setting: str, value: str) -> str:
+    def changeSetting(userId: int, setting: str, value: any) -> str:
         # Check if they are in the settings
         if not SManager.checkUserExist(userId):
             SManager.createUser(userId)
@@ -50,7 +54,7 @@ class SManager:
             return "unknownOption"
         
         userSettings[str(userId)][setting] = value
-        FManager.write("userPreferences.json", userSettings)
+        SManager.save()
         return "success"
     
 
@@ -67,6 +71,7 @@ class SManager:
             return False
         
         Logger.log(f"Added missing setting for {userId}")
+
         return True
         
     @staticmethod
@@ -77,6 +82,7 @@ class SManager:
             Logger.warn(err)
             return False
         Logger.log(f"Removed extra setting for {userId}")
+
         return True
         
     @staticmethod
@@ -94,11 +100,9 @@ class SManager:
             if setting not in settingOptions:
                 SManager.handleExtraSetting(userId, setting)
 
+        SManager.save()
+
         return True
-
-
-
-
 
     @staticmethod
     def resetDefault(userId: int) -> bool:
@@ -107,7 +111,7 @@ class SManager:
         except Exception as err:
             Logger.warn(err)
             return False
-        
+        SManager.save()
         return True
     
 
@@ -122,6 +126,13 @@ class SManager:
             return True
         
     @staticmethod
+    def checkAllowDMs(userId: int) -> bool:
+        if not SManager.checkUserExist(userId):
+            SManager.createUser(userId)
+
+        return userSettings[str(userId)]["allowDMs"] == "True"
+        
+    @staticmethod
     def getSettings(userId: int) -> dict:
         # This is to check if user has all updated settings
         if not SManager.updateAllSettings(userId):
@@ -129,3 +140,12 @@ class SManager:
             return {"error": "Error"}
 
         return userSettings[str(userId)]
+    
+    @staticmethod
+    def removeUser(userId: int) -> bool:
+        if not SManager.checkUserExist(userId):
+            SManager.createUser(userId)
+
+        del userSettings[str(userId)]
+        SManager.save()
+        return True

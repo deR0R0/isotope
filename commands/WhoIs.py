@@ -114,6 +114,10 @@ class whois:
                 Logger.log(f"Successfully Refreshed {user}'s Token!")
                 await whois.whois(interaction, user, originalResponse)
 
+        except discord.errors.Forbidden:
+            Logger.warn("Bot has been forbidden'd, missing permissions.")
+            await originalResponse.edit(embed=discordEmbedForbidden)
+
         except Exception as err:
             Logger.err(err)
             await originalResponse.edit(embed=discordEmbedInternalError)

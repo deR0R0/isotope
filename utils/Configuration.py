@@ -29,21 +29,31 @@ config = {}
 # User Preferences
 userSettings = {}
 defaultUserSettings = {
-    "privacy": "private"
+    "allowDMs": True,
+    "privacy": "private",
+    "signUpForEighth": True,
+    "eighthReminders": False,
 }
 
 settingOptions = {
-    "privacy": ["private", "public"]
+    "allowDMs": ["True", "False"],
+    "privacy": ["private", "public"],
+    "signUpForEighth": ["True", "False"],
+    "eighthReminders": ["True", "False"],
 }
 
 settingsDescriptions = {
-    "privacy": "People cannot see your personal information when private"
+    "allowDMs": "If this bot can DM you.",
+    "privacy": "People cannot see your personal information when private.",
+    "signUpForEighth": "Ping/DM when you haven't signed up for eighth.",
+    "eighthReminders": "DMs you about your eighth period details."
 }
 
 # User Currency Stuff
 userMoney = {}
 defaultUserMoney = {
-    "money": 0
+    "money": 0,
+    "bank": 0
 }
 
 # Discord Embeds
@@ -61,6 +71,9 @@ discordEmbedReauthorizePlease = discord.Embed(title=":x: Invalid Token, please r
 discordEmbedSuccessfullyChangedSetting = discord.Embed(title=":white_check_mark: Successfully Changed Setting To ", color=discord.Color.green())
 discordEmbedUnknownSettingOption = discord.Embed(title=":x: Unknown Setting Option", color=discord.Color.red())
 discordEmbedAccountPrivate = discord.Embed(title=":x: User's Account is Private", color=discord.Color.red())
+discordEmbedForbidden = discord.Embed(title=":x: I Don't Have Permissions", color=discord.Color.red())
+
+
 discordEmbedClaimedIQ = discord.Embed(title=":white_check_mark: Claimed 100 IQ!", color=discord.Color.green())
 
 
@@ -82,6 +95,9 @@ settings_ViewDescription = "View your user settings"
 
 settings_PrivacyName = "privacy"
 settings_PrivacyDescription = "Set your privacy settings to public or private"
+
+settings_AllowDMsName = "allowdms"
+settings_AllowDMsDescription = "Allow this bot to send you dms"
 
 
 
