@@ -4,9 +4,7 @@
     "removeRateLimitTime": 5,
     "disableAuthentication": false,
     "approvedCLIUsers": [
-        "668626305188757536",
-        "809912854332702750",
-        "1126322739620364328"
+        "668626305188757536"
     ],
     "enabledCommands": {
         "authorize": true,
@@ -19,7 +17,9 @@
         "settings_signupforeighth": true,
         "settings_eighthreminders": true,
         "currency_daily": true,
-        "currency_balance": true
+        "currency_balance": true,
+        "currency_deposit": true,
+        "currency_withdraw": true
     },
     "serverConfigs": {
         "1240269361659383920": {
@@ -27,7 +27,7 @@
             "authorizeChannel": "1285636266821419029",
             "authorizeButton": [
                 1285636266821419029,
-                1303793072735387708
+                1306976037325770794
             ]
         }
     }

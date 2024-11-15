@@ -8,3 +8,4 @@ requests_oauthlib
 flask
 pillow
 psutil
+speedtest-cli

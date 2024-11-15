@@ -61,6 +61,7 @@ discordEmbedInternalError = discord.Embed(title=":x: Internal Error!", color=dis
 discordEmbedServerError = discord.Embed(title=":x: Server Error!", color=discord.Color.red())
 discordEmbedRateLimited = discord.Embed(title=":x: Rate Limited!", description="You've Been Rate Limited! 🙃", color=discord.Color.red())
 discordEmbedLoading = discord.Embed(title="<a:loadinggif:1278333115516850253> Loading...", color=discord.Color.blurple())
+discordEmbedPerformingSpeedTest = discord.Embed(title="<a:loadinggif:1278333115516850253> Performing Speed Test!", color=discord.Color.blurple())
 discordEmbedAccountNotConnected = discord.Embed(title=":x: Ion Account Not Connected", description="Tip: Use the /authorize command to connect your Ion account!", color=discord.Color.red())
 discordEmbedConnectAccount = discord.Embed(title="Developing Mode... Check back later!", color=discord.Color.green())
 discordEmbedCommandDisabled = discord.Embed(title=":x: Command Disabled!", color=discord.Color.red())
@@ -72,6 +73,10 @@ discordEmbedSuccessfullyChangedSetting = discord.Embed(title=":white_check_mark:
 discordEmbedUnknownSettingOption = discord.Embed(title=":x: Unknown Setting Option", color=discord.Color.red())
 discordEmbedAccountPrivate = discord.Embed(title=":x: User's Account is Private", color=discord.Color.red())
 discordEmbedForbidden = discord.Embed(title=":x: I Don't Have Permissions", color=discord.Color.red())
+discordEmbedTransferedIQ = discord.Embed(title=":x: Successfully Tranferred __ IQ!", color=discord.Color.green())
+discordEmbedInsufficientFunds = discord.Embed(title=":x: Insufficient IQ", color=discord.Color.red())
+discordEmbedDepositNotValidInput = discord.Embed(title=":x: Not Valid Input", description="Valid Options: ```<number / all / half>```", color=discord.Color.red())
+discordEmbedDepositZeroIQ = discord.Embed(title=":x: Cannot Deposit ```0 IQ```!", color=discord.Color.red())
 
 
 discordEmbedClaimedIQ = discord.Embed(title=":white_check_mark: Claimed 100 IQ!", color=discord.Color.green())
@@ -98,6 +103,10 @@ settings_PrivacyDescription = "Set your privacy settings to public or private"
 
 settings_AllowDMsName = "allowdms"
 settings_AllowDMsDescription = "Allow this bot to send you dms"
+
+commandOptions = {
+    "currency_deposit": ["all", "half", "100", "200", "300", "400", "500"]
+}
 
 
 

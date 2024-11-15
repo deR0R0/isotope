@@ -20,6 +20,8 @@ from utils.CurrencyManager import CManager
 class daily:
     @staticmethod
     async def daily(interaction: discord.Interaction, originalResponse = None):
+        Logger.cmd(f"{interaction.user} used /currency daily")
+
         # Send loading
         if originalResponse == None:
             await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=False)
@@ -40,7 +42,7 @@ class daily:
             response = CManager.claimDailyReward(interaction.user.id)
 
             if response.isnumeric():
-                await originalResponse.edit(embed=discord.Embed(title=f":x: Already Claimed Daily!", description=f"Please wait <t:{response}:R> to claim again!", color=discord.Color.red()))
+                await originalResponse.edit(embed=discord.Embed(title=f":x: Already Claimed Daily!", description=f"You can claim your daily again <t:{response}:R>!", color=discord.Color.red()))
                 return
             
             await originalResponse.edit(embed=discordEmbedClaimedIQ)

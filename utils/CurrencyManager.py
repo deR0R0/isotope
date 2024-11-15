@@ -18,8 +18,8 @@ class CManager:
         except Exception as err:
             Logger.warn(err)
             return False
+        CManager.save()
 
-        return True
     
     @staticmethod
     def checkUserHasAccount(userId: int) -> None:
@@ -33,6 +33,7 @@ class CManager:
         for field in defaultUserMoney.keys():
             if field not in userMoney[str(userId)]:
                 userMoney[str(userId)][field] = defaultUserMoney[field]
+        
 
     
     @staticmethod
@@ -88,3 +89,35 @@ class CManager:
         userMoney[str(userId)]["lastClaimedDaily"] = str(int(time.time()))
         CManager.save()
         return "claimed"
+    
+    @staticmethod
+    def transferToBank(userId: int, amount: int) -> str:
+        try:
+            CManager.checkUserHasAccount(userId)
+            if (userMoney[str(userId)]["money"]) < amount:
+                return "insufficientFunds"
+            
+            (userMoney[str(userId)]["money"]) -= amount
+            (userMoney[str(userId)]["bank"]) += amount
+
+        except Exception as err:
+            Logger.warn(err)
+            return "err"
+        CManager.save()
+        return "success"
+    
+    @staticmethod
+    def transferFromBank(userId: int, amount: int) -> str:
+        try:
+            CManager.checkUserHasAccount(userId)
+            if (userMoney[str(userId)]["bank"]) < amount:
+                return "insufficientFunds"
+            
+            (userMoney[str(userId)]["money"]) += amount
+            (userMoney[str(userId)]["bank"]) -= amount
+
+        except Exception as err:
+            Logger.warn(err)
+            return "err"
+        CManager.save()
+        return "success"

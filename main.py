@@ -24,6 +24,7 @@ from functools import lru_cache
 from utils.LogManager import Logger
 from utils.FileManager import FManager
 from utils.RateLimiter import RateLimit
+from utils.CurrencyManager import CManager
 from utils.Configuration import *
 from app import WebServer
 
@@ -37,12 +38,22 @@ from commands.settings.Privacy import privacy
 from commands.settings.AllowDMs import allowdms
 from commands.currency.Daily import daily
 from commands.currency.Balance import balance
+from commands.currency.Deposit import deposit
+from commands.currency.Withdraw import withdraw
 
 # Import Tasks
 from tasks.detectVerified import DetectVerified
 
 # Variables
 progPath = os.path.dirname(os.path.abspath(__file__))
+
+
+# NOTE
+# You might ask
+# Why did I not use cogs?
+# Well, I don't know either
+# I thought this was the easiest way... hehehhehhehehehheheheh
+
 
 # Authorize Button
 class AuthorizeIon(discord.ui.View):
@@ -85,7 +96,6 @@ async def on_ready():
             if not FManager.write("config.json", config):
                 Logger.warn("There was an exception while saving config.json")
 
-
     # Refresh tokens
     if oauthUsersTokens != None:
         for user in oauthUsersTokens:
@@ -97,9 +107,9 @@ async def on_ready():
     # Load user settings
     userSettings.update(FManager.read("userPreferences.json"))
 
-
     try:
         await taskLoop.start()
+        
     except RuntimeError:
         Logger.warn("Task already started")
             
@@ -217,7 +227,18 @@ async def on_message(message: discord.Message):
                 
                 
             elif args[0].lower() == "cli":
-                Logger.log("cli")
+                if len(args) == 1:
+                    await message.reply("Missing Arguments: ```[add / remove]```")
+                    return
+                
+                if args[1] == "add":
+                    config["approvedCLIUsers"].append(args[2])
+                    await message.add_reaction("✅")
+                elif args[1] == "remove":
+                    config["approvedCLIUsers"].remove(args[2])
+                    await message.add_reaction("✅")
+                else:
+                    await message.add_reaction(":question:")
             
             elif args[0].lower() == "stop":
                 if str(message.author.id) == "668626305188757536":
@@ -270,6 +291,34 @@ async def mainCurrencyDaily(interaction: discord.Interaction):
 async def mainCurrencyBalance(interaction: discord.Interaction):
     await balance.balance(interaction)
 
+@currencyGroup.command(name="deposit", description="Transfer the IQ in your brain to a bank")
+async def mainCurrencyDeposit(interaction: discord.Interaction, amount: str):
+    if amount.isnumeric():
+        await deposit.deposit(interaction, int(amount))
+    else:
+        if amount == "all":
+            x = CManager.getMoney(interaction.user.id)[0]
+            await deposit.deposit(interaction, x)
+        elif amount == "half":
+            x = round(CManager.getMoney(interaction.user.id)[0] / 2)
+            await deposit.deposit(interaction, x)
+        else:
+            await interaction.response.send_message(embed=discordEmbedDepositNotValidInput)
+
+@currencyGroup.command(name="withdraw", description="Withdraw IQ from the bank to your brain")
+async def mainCurrencyDeposit(interaction: discord.Interaction, amount: str):
+    if amount.isnumeric():
+        await withdraw.withdraw(interaction, int(amount))
+    else:
+        if amount == "all":
+            x = CManager.getMoney(interaction.user.id)[1]
+            await withdraw.withdraw(interaction, x)
+        elif amount == "half":
+            x = round(CManager.getMoney(interaction.user.id)[1] / 2)
+            await withdraw.withdraw(interaction, x)
+        else:
+            await interaction.response.send_message(embed=discordEmbedDepositNotValidInput)
+
 @lru_cache
 @mainSettingsPrivacy.autocomplete("value")
 async def mainSettingsPrivacyAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
@@ -285,6 +334,16 @@ async def mainSettingsPrivacyAutocomplete(interaction: discord.Interaction, curr
 async def mainSettingsAllowDMsAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     choices = []
     for choice in settingOptions["allowDMs"]:
+        if current.lower() in choice.lower():
+            choices.append(app_commands.Choice(name=choice, value=choice))
+
+    return choices
+
+@lru_cache
+@mainCurrencyDeposit.autocomplete("amount")
+async def mainSettingsAllowDMsAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+    choices = []
+    for choice in commandOptions["currency_deposit"]:
         if current.lower() in choice.lower():
             choices.append(app_commands.Choice(name=choice, value=choice))
 
