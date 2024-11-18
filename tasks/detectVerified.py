@@ -65,7 +65,7 @@ class DetectVerified:
                     
                             # Once added role, we want to tell them they're verified
                             if SManager.checkAllowDMs(discordUser.id):
-                                await discordUser.send(embed=discord.Embed(title=f":white_check_mark: Authenticated!", color=discord.Color.green()))
+                                await discordUser.send(embed=discord.Embed(title=f":white_check_mark: Authenticated!", color=discord.Color.green(), description="Tip: Use ```/settings privacy public``` to make your profile public!"))
                             Logger.log(f"Successfully verified {discordUser.name}")
 
 

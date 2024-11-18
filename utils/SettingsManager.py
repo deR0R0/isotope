@@ -120,6 +120,10 @@ class SManager:
         if not SManager.checkUserExist(userId):
             SManager.createUser(userId)
 
+        if not SManager.updateAllSettings(userId):
+            Logger.warn("There was an error while updating someone's settings")
+            return False
+
         if userSettings[str(userId)]["privacy"].lower() == "private":
             return False
         else:
@@ -129,6 +133,10 @@ class SManager:
     def checkAllowDMs(userId: int) -> bool:
         if not SManager.checkUserExist(userId):
             SManager.createUser(userId)
+
+        if not SManager.updateAllSettings(userId):
+            Logger.warn("There was an error while updating someone's settings")
+            return False
 
         return userSettings[str(userId)]["allowDMs"] == "True"
         

@@ -28,21 +28,15 @@ from utils.CurrencyManager import CManager
 from utils.Configuration import *
 from app import WebServer
 
-# Import commands
 from commands.Authorize import authorize
-from commands.Deauthorize import deauthorize
 from commands.WhoIs import whois
-from commands.About import about
-from commands.settings.View import view
-from commands.settings.Privacy import privacy
-from commands.settings.AllowDMs import allowdms
-from commands.currency.Daily import daily
-from commands.currency.Balance import balance
-from commands.currency.Deposit import deposit
-from commands.currency.Withdraw import withdraw
 
 # Import Tasks
 from tasks.detectVerified import DetectVerified
+
+# Register commands
+from utils.RegisterCmds import *
+from utils.Autocomplete import *
 
 # Variables
 progPath = os.path.dirname(os.path.abspath(__file__))
@@ -52,7 +46,7 @@ progPath = os.path.dirname(os.path.abspath(__file__))
 # You might ask
 # Why did I not use cogs?
 # Well, I don't know either
-# I thought this was the easiest way... hehehhehhehehehheheheh
+# I thought this was the easiest way... too bad i guess
 
 
 # Authorize Button
@@ -74,7 +68,7 @@ os.system("clear")
 async def on_ready():
     # Online, Log username
     Logger.log("Bot Online, logged in as: " + str(client.user))
-    Logger.log(f"Synced {len(await client.tree.sync())} commands")
+    Logger.log(f"Synced {len(await client.tree.sync())} commands/command groups")
 
     # Delete Previous Buttons
     for server in list(config["serverConfigs"].keys()):
@@ -249,105 +243,7 @@ async def on_message(message: discord.Message):
         
             FManager.write("config.json", config)
 
-# Commands
-@client.tree.command(name=authorizeName, description=authorizeDescription)
-async def mainAuthorize(interaction: discord.Interaction):
-    await authorize.authorize(interaction)
 
-@client.tree.command(name=deauthorizeName, description=deauthorizeDescription)
-async def mainDeauthorize(interaction: discord.Interaction):
-    await deauthorize.deauthorize(interaction)
-
-@client.tree.command(name=whoisName, description=whoisDescription)
-async def mainWhoIs(interaction: discord.Interaction, user: discord.Member = None):
-    await whois.whois(interaction, user)
-
-@client.tree.command(name=aboutName, description=aboutDescription)
-async def mainAbout(interaction: discord.Interaction):
-    await about.about(interaction)
-
-# Settings Commands
-@settingsGroup.command(name=settings_ViewName, description=settings_ViewDescription)
-async def mainSettings(interaction: discord.Interaction):
-    await view.view(interaction)
-
-@settingsGroup.command(name=settings_PrivacyName, description=settings_PrivacyDescription)
-@app_commands.describe(value="Set your privacy to public or private")
-async def mainSettingsPrivacy(interaction: discord.Interaction, value: str):
-    await privacy.privacy(interaction, value)
-
-@settingsGroup.command(name=settings_AllowDMsName, description=settings_AllowDMsDescription)
-@app_commands.describe(value="Allow or not the bot to send you dms. True/False")
-async def mainSettingsAllowDMs(interaction: discord.Interaction, value: str):
-    await allowdms.allowdms(interaction, value)
-
-
-# Currency Commands
-@currencyGroup.command(name="daily", description="Every 24 hours you can claim 100 IQ")
-async def mainCurrencyDaily(interaction: discord.Interaction):
-    await daily.daily(interaction)
-
-@currencyGroup.command(name="balance", description="See your balance")
-async def mainCurrencyBalance(interaction: discord.Interaction):
-    await balance.balance(interaction)
-
-@currencyGroup.command(name="deposit", description="Transfer the IQ in your brain to a bank")
-async def mainCurrencyDeposit(interaction: discord.Interaction, amount: str):
-    if amount.isnumeric():
-        await deposit.deposit(interaction, int(amount))
-    else:
-        if amount == "all":
-            x = CManager.getMoney(interaction.user.id)[0]
-            await deposit.deposit(interaction, x)
-        elif amount == "half":
-            x = round(CManager.getMoney(interaction.user.id)[0] / 2)
-            await deposit.deposit(interaction, x)
-        else:
-            await interaction.response.send_message(embed=discordEmbedDepositNotValidInput)
-
-@currencyGroup.command(name="withdraw", description="Withdraw IQ from the bank to your brain")
-async def mainCurrencyDeposit(interaction: discord.Interaction, amount: str):
-    if amount.isnumeric():
-        await withdraw.withdraw(interaction, int(amount))
-    else:
-        if amount == "all":
-            x = CManager.getMoney(interaction.user.id)[1]
-            await withdraw.withdraw(interaction, x)
-        elif amount == "half":
-            x = round(CManager.getMoney(interaction.user.id)[1] / 2)
-            await withdraw.withdraw(interaction, x)
-        else:
-            await interaction.response.send_message(embed=discordEmbedDepositNotValidInput)
-
-@lru_cache
-@mainSettingsPrivacy.autocomplete("value")
-async def mainSettingsPrivacyAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
-    choices = []
-    for choice in settingOptions["privacy"]:
-        if current.lower() in choice.lower():
-            choices.append(app_commands.Choice(name=choice, value=choice))
-
-    return choices
-
-@lru_cache
-@mainSettingsAllowDMs.autocomplete("value")
-async def mainSettingsAllowDMsAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
-    choices = []
-    for choice in settingOptions["allowDMs"]:
-        if current.lower() in choice.lower():
-            choices.append(app_commands.Choice(name=choice, value=choice))
-
-    return choices
-
-@lru_cache
-@mainCurrencyDeposit.autocomplete("amount")
-async def mainSettingsAllowDMsAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
-    choices = []
-    for choice in commandOptions["currency_deposit"]:
-        if current.lower() in choice.lower():
-            choices.append(app_commands.Choice(name=choice, value=choice))
-
-    return choices
 
 # Tasks
 @tasks.loop(seconds=3)

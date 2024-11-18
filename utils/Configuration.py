@@ -105,7 +105,8 @@ settings_AllowDMsName = "allowdms"
 settings_AllowDMsDescription = "Allow this bot to send you dms"
 
 commandOptions = {
-    "currency_deposit": ["all", "half", "100", "200", "300", "400", "500"]
+    "currency_deposit": ["all", "half", "100", "200", "300", "400", "500"],
+    "currency_withdraw": ["all", "half", "100", "200", "300", "400", "500"]
 }
 
 
