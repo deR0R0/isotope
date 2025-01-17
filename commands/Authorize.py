@@ -1,61 +1,43 @@
-import sys
-import os
-import discord
-from discord import app_commands
-from requests_oauthlib import OAuth2Session
+import sys, discord
 
-# Import Utilities
 sys.path.insert(1, sys.path[0].replace("commands", ""))
-from utils.Configuration import *
-from utils.FileManager import FManager
-from utils.LogManager import Logger
-from utils.RateLimiter import RateLimit
-from utils.OauthManager import OManager
+from utils import Logger, Config, DBManager, CUtils, OAuthHelper
+from utils.Config import client, oauthSession
 
-# Create the command class
-class authorize:
+class AuthorizeButton(discord.ui.View):
+    def __init__(self, url, message: discord.InteractionMessage):
+        super().__init__(timeout=Config.AUTHORIZE_BUTTON_TIMEOUT)
+        self.button = discord.ui.Button(label="Authorize", style=discord.ButtonStyle.url, url=url)
+        self.add_item(self.button)
+        self.msg = message
 
-    # Actual command
-    @staticmethod
-    async def authorize(interaction: discord.Interaction, originalResponse=None):
+    async def on_timeout(self):
+        self.button.disabled = True
+        await self.msg.edit(embed=discord.Embed(title=":x: Authorize Button Expired", color=discord.Color.red()), view=self)
 
-        # Log Command that was Ran
-        Logger.log(f"{interaction.user} used /authorize")
+@client.tree.command(name=Config.COMMAND_AUTHORIZE[0], description=Config.COMMAND_AUTHORIZE[1])
+async def authorize_front(interaction: discord.Interaction):
+    await authorize(interaction)
 
-        # Loading...
-        if originalResponse == None:
-            await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=True)
-            originalResponse = await interaction.original_response()
-        
-        # Check if command is enabled or not
-        if not config["enabledCommands"]["authorize"]:
-            await originalResponse.edit(embed=discordEmbedCommandDisabled)
-            return
+async def authorize(interaction: discord.Interaction):
+    Logger.info("commands.Authorize.authorize", f"Authorize Command Called by {interaction.user.name}")
+    await interaction.response.send_message(embed=discord.Embed(title=":atom: Authorize via Ion", description="Please wait while we generate your URL", color=discord.Color.dark_grey()), ephemeral=True)
+    res = await interaction.original_response()
 
-        # Rate Limiter
-        if RateLimit.addUser(interaction.user.id):
-            Logger.log(f"{interaction.user} has been rate limited!")
-            await originalResponse.edit(embed=discordEmbedRateLimited)
-            return
-        
-        # Check if they already connected or not
-        if OManager.checkOauthSession(interaction.user.id):
-            await originalResponse.edit(embed=discord.Embed(title=":x: Already Connected", color=discord.Color.red()))
-            return
-        
-        # Wrap in try catch statmeent
-        try:
-            # Create a new oauth session
-            oauthUsers[str(interaction.user.id)] = OAuth2Session(client_id=CLIENTID, redirect_uri=oauthLink, scope="read")
-            authURL, state = oauthUsers[str(interaction.user.id)].authorization_url("https://ion.tjhsst.edu/oauth/authorize")
+    # Check if command is disabled
+    if CUtils.check_disabled("authorize"):
+        await interaction.followup.send(embed=Config.DISCORD_EMBED_COMMAND_DISABLED)
+        return
+    
+    # Check Session
+    if OAuthHelper.check_session(interaction.user.id):
+        await interaction.followup.send(embed=Config.DISCORD_EMBED_ALREADY_AUTHORIZED)
+        return
+    
+    # Create session
+    url, state = oauthSession.authorization_url(Config.ION_AUTHORIZATION_URL)
 
-            # Set their state so when they authorize, it will link to correct user
-            oauthUsers[str(interaction.user.id)] = state
-        except Exception as err:
-            Logger.err(err)
-            await originalResponse.edit(embed=discordEmbedInternalError)
-            
-        # Send authorize URL back
-        await originalResponse.edit(embed=discord.Embed(description=f"[Authorize On Ion]({authURL})"))
+    # Set user's token to state, that way we can check if the user is authorized
+    DBManager.edit_token_user_id(interaction.user.id, state)
 
-
+    await res.edit(embed=discord.Embed(title=f":atom: Authorize via Ion", description=f"Button Expires in {Config.AUTHORIZE_BUTTON_TIMEOUT} Seconds", color=discord.Color.dark_grey()), view=AuthorizeButton(url, res))

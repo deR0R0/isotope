@@ -1,130 +1,25 @@
+import sys, discord
 
-import sys
-import os
-import discord
-from discord import app_commands
-from requests_oauthlib import OAuth2Session
-from functools import lru_cache
-
-# Import Utilities
 sys.path.insert(1, sys.path[0].replace("commands", ""))
-from utils.Configuration import *
-from utils.FileManager import FManager
-from utils.LogManager import Logger
-from utils.RateLimiter import RateLimit
-from utils.OauthManager import OManager
+from utils import Logger, Config, DBManager, CUtils, OAuthHelper
+from utils.Config import client, oauthSession
 
-# ConfirmDeletion
-class ConfirmDeletion(discord.ui.View):
-    def __init__(self, msg: discord.Message, userId: int):
-        self.userId: int = userId
-        self.msg: discord.Message = msg
-        super().__init__(timeout=None)
+@client.tree.command(name=Config.COMMAND_DEAUTHORIZE[0], description=Config.COMMAND_DEAUTHORIZE[1])
+async def deauthorize(interaction: discord.Interaction):
+    Logger.info("commands.Deauthorize.deauthorize", f"Authorize Command Called by {interaction.user.name}")
+    await interaction.response.defer(ephemeral=True)
+
+    # Check if command is disabled
+    if CUtils.check_disabled("deauthorize"):
+        await interaction.followup.send(embed=Config.DISCORD_EMBED_COMMAND_DISABLED)
+        return
     
-    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.success)
-    async def authenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if this is their button
-        if self.userId != interaction.user.id:
-            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton, ephemeral=True)
-            return
-        
-        # Call the actual deletion
-        Logger.cmd(f"{interaction.user} pressed Confirm Deletion button!")
-        await deauthorize.deleteAccount(interaction, self.msg)
+    # Check Session
+    if not OAuthHelper.check_session(interaction.user.id):
+        await interaction.followup.send(embed=Config.DISCORD_EMBED_NOT_AUTHORIZED)
+        return
+    
+    # Delete session
+    DBManager.del_user(interaction.user.id)
 
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
-    async def deauthenticate(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # CHeck if this is their button
-        if self.userId != interaction.user.id:
-            await interaction.response.send_message(embed=discordEmbedThisIsNotYourButton, ephemeral=True)
-            return
-        
-        # Remove this message
-        await interaction.response.send_message(embed=discord.Embed(title=":x: Canceled!", color=discord.Color.red()), ephemeral=True)
-        await self.msg.delete()
-
-# Create the command class
-class deauthorize:
-
-    # Actual command
-    @staticmethod
-    async def deauthorize(interaction: discord.Interaction, originalResponse=None):
-
-        # Log Command that was Ran
-        Logger.log(f"{interaction.user} used /deauthorize")
-
-        # Loading...
-        if originalResponse == None:
-            await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=True)
-            originalResponse = await interaction.original_response()
-        
-        # Check if command is enabled or not
-        if not config["enabledCommands"]["deauthorize"]:
-            await originalResponse.edit(embed=discordEmbedCommandDisabled)
-
-        # Rate Limiter
-        if RateLimit.addUser(interaction.user.id):
-            Logger.log(f"{interaction.user} has been rate limited!")
-            await originalResponse.edit(embed=discordEmbedRateLimited)
-            return
-        
-        # Check if they have connected or not
-        if str(interaction.user.id) not in oauthUsers:
-            await originalResponse.edit(embed=discordEmbedAccountNotConnected)
-            return
-        
-        # Wrap in try catch statmeent
-        try:
-            # Send buttons
-            await originalResponse.edit(embed=discordEmbedAreYouSure, view=ConfirmDeletion(originalResponse, interaction.user.id))
-
-        except Exception as err:
-            Logger.err(err)
-            await originalResponse.edit(embed=discordEmbedInternalError)
-            
-       
-    # Deletion Background Task
-    @staticmethod
-    async def deleteAccount(interaction: discord.Interaction, message: discord.Message, originalResponse = None):
-        
-        # Log Command that was Ran
-        Logger.log(f"{interaction.user} is deauthorizing their account!")
-
-        # Delete the other message
-        await message.delete()
-
-        # Loading...
-        if originalResponse == None:
-            await interaction.response.send_message(embed=discordEmbedLoading, ephemeral=True)
-            originalResponse = await interaction.original_response()
-        
-        # Check if command is enabled or not
-        if not config["enabledCommands"]["deauthorize"]:
-            await originalResponse.edit(embed=discordEmbedCommandDisabled)
-            return
-
-        # Rate Limiter
-        if RateLimit.addUser(interaction.user.id):
-            Logger.log(f"{interaction.user} has been rate limited!")
-            await originalResponse.edit(embed=discordEmbedRateLimited)
-            return
-        
-        # Wrap in try catch statmeent
-        try:
-
-            # Delete the key from session
-            OManager.deleteUser(interaction.user.id)
-            # Save the tokens
-            FManager.write("tokens.json", oauthUsersTokens)
-
-        except Exception as err:
-            Logger.err(err)
-            await originalResponse.edit(embed=discordEmbedInternalError)
-            return
-
-        await originalResponse.edit(embed=discord.Embed(title=":white_check_mark: Successfully Removed!", description="You can always reauthorize with /authorize 🥺", color=discord.Color.green()))
-
-
-
-if __name__ == "__main__":
-    Logger.log("This file is not meant to be run. Please run via the main process (main.py)")
+    await interaction.followup.send(embed=discord.Embed(title=f":white_check_mark: Successfully Deleted!", description=f"Anything associated with you has been removed. You may revoke the oauth session (to be secure) at <https://ion.tjhsst.edu/oauth/application>.", color=discord.Color.green()), ephemeral=True)
