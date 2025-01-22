@@ -1,7 +1,7 @@
 import sys, discord
 
 sys.path.insert(1, sys.path[0].replace("commands", ""))
-from utils import Logger, Config, DBManager, CUtils, OAuthHelper
+from utils import Logger, Config, DBManager, CUtils, OAuthHelper, UserTools
 from utils.Config import client, oauthSession
 
 class AuthorizeButton(discord.ui.View):
@@ -26,12 +26,12 @@ async def authorize(interaction: discord.Interaction):
 
     # Check if command is disabled
     if CUtils.check_disabled("authorize"):
-        await interaction.followup.send(embed=Config.DISCORD_EMBED_COMMAND_DISABLED)
+        await res.edit(embed=Config.DISCORD_EMBED_COMMAND_DISABLED)
         return
     
     # Check Session
     if OAuthHelper.check_session(interaction.user.id):
-        await interaction.followup.send(embed=Config.DISCORD_EMBED_ALREADY_AUTHORIZED)
+        await res.edit(embed=Config.DISCORD_EMBED_ALREADY_AUTHORIZED)
         return
     
     # Create session

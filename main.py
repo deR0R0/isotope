@@ -40,6 +40,9 @@ async def on_ready():
     # Sync commands
     Logger.info("main.on_ready", f"Synced {len(await client.tree.sync())} commands")
 
+    # Show how many servers it's in
+    Logger.info("main.on_ready", f"Currently in {len(client.guilds)} servers")
+
     # Remove previous buttons
 
     # Create Button

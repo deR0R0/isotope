@@ -20,6 +20,7 @@ class DBManager:
             cursor = db.cursor()
         except sqlite3.Error as e:
             Logger.error("DBManager.connect", f"Error connecting to database: {e}")
+            exit(1)
 
         # prepare the db, make sure the table needed exists
         DBManager.prepare()

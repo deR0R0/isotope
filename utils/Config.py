@@ -2,10 +2,12 @@ import discord, os
 from requests_oauthlib import OAuth2Session
 from discord.ext import commands
 from colorama import Fore as fore
+from . import Logger
 
 # General
 PROGRAM_PATH = ""
 AUTHORIZE_BUTTON_CHANNEL = "1285636266821419029"
+DEVELOPMENT = os.environ.get("DEVELOPMENT")
 
 
 
@@ -44,8 +46,13 @@ COMMAND_DEAUTHORIZE = ["deauthorize", "Disconnect your Ion account from your Dis
 # Oauth Stuff
 ION_CLIENT_ID = os.environ.get("ION_CLIENT_ID")
 ION_CLIENT_SECRET = os.environ.get("ION_CLIENT_SECRET")
+
 ION_AUTHORIZATION_URL = "https://ion.tjhsst.edu/oauth/authorize"
 ION_TOKEN_URL = "https://ion.tjhsst.edu/oauth/token"
+ION_REDIRECT_URI = "https://isotope.der0r0.hackclub.app/authorize"
+if DEVELOPMENT == "True":
+    ION_REDIRECT_URI = "http://localhost:1211/authorize"
+
 oauthSession = OAuth2Session(client_id=ION_CLIENT_ID, redirect_uri="http://localhost:1211/authorize", scope=["read"])
 SQL_INJECTION_WORDS = ["--", ";", "select", "drop", "where", "from", "and", "true", "false", "oauthkey", "id", "="] # prs for more?
 
@@ -56,5 +63,9 @@ AUTHORIZE_BUTTON_TIMEOUT = 20
 # Functions allowing the modification of config
 def set_path(path: str):
     global PROGRAM_PATH
-
     PROGRAM_PATH = path
+
+
+# Check whether or not the user setup the virutal environment properly
+if ION_CLIENT_ID is None or ION_CLIENT_SECRET is None or DISCORD_TOKEN is None or DEVELOPMENT is None:
+    raise Exception("Missing environmental variable(s)")
