@@ -16,7 +16,7 @@ class DBManager:
 
         # connect db and store in global variable
         try:
-            db = sqlite3.connect(f"data/{DBNAME}", check_same_thread=False)
+            db = sqlite3.connect(f"{Config.PROGRAM_PATH}/data/{DBNAME}", check_same_thread=False)
             cursor = db.cursor()
         except sqlite3.Error as e:
             Logger.error("DBManager.connect", f"Error connecting to database: {e}")
