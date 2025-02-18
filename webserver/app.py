@@ -42,12 +42,14 @@ def authorize():
         return "err"
     x = OAuthHelper.link_token_via_state(state, dict(token))
 
-    if x == "sql_injection":
-        return "nice try bud"
-    elif x == False:
-        return "nice try, use a real session now"
-    else:
-        return "success, return back to discord plz :)"
+    # send the correct response back
+    match x:
+        case "sql_injection":
+            return "nice try"
+        case False:
+            return "use a real session"
+        case _:
+            return "success"
 
 
 def run():

@@ -1,6 +1,7 @@
 #! /bin/bash
 
 # This script is used to catch up my development db from the production db.
+# You may delete this file if you are running this locally.
 read -p "Are you Sure? Will erase this machine's db " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]

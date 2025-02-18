@@ -10,7 +10,6 @@ AUTHORIZE_BUTTON_CHANNEL = "1285636266821419029"
 DEVELOPMENT = os.environ.get("DEVELOPMENT")
 
 
-
 # Logger
 LOGGER_DATE_COLOR = fore.LIGHTBLACK_EX
 LOGGER_NORM_COLOR = fore.WHITE
@@ -39,22 +38,25 @@ COMMAND_STATUSES = {
     "deauthorize": True
 }
 
-# Command Names
+# Command Names and Descriptions
 COMMAND_AUTHORIZE = ["authorize", "Connect your Ion account to your Discord account"]
 COMMAND_DEAUTHORIZE = ["deauthorize", "Disconnect your Ion account from your Discord account"]
 
-# Oauth Stuff
+# Oauth application
 ION_CLIENT_ID = os.environ.get("ION_CLIENT_ID")
 ION_CLIENT_SECRET = os.environ.get("ION_CLIENT_SECRET")
 
+# Oauth urls
 ION_AUTHORIZATION_URL = "https://ion.tjhsst.edu/oauth/authorize"
 ION_TOKEN_URL = "https://ion.tjhsst.edu/oauth/token"
+
+# Change redirect uri based on whether or not the application is in development or not
 ION_REDIRECT_URI = "https://isotope.der0r0.hackclub.app/authorize"
 if DEVELOPMENT == "True":
     ION_REDIRECT_URI = "http://localhost:1211/authorize"
 
-oauthSession = OAuth2Session(client_id=ION_CLIENT_ID, redirect_uri="http://localhost:1211/authorize", scope=["read"])
-SQL_INJECTION_WORDS = ["--", ";", "select", "drop", "where", "from", "and", "true", "false", "oauthkey", "id", "="] # prs for more?
+oauthSession = OAuth2Session(client_id=ION_CLIENT_ID, redirect_uri=ION_REDIRECT_URI, scope=["read"])
+SQL_INJECTION_WORDS = ["--", ";", "select", "drop", "where", "from", "and", "true", "false", "oauthkey", "id", "="] # this is not how you prevent sql injects but whatever
 
 # Authorize Command Stuff
 AUTHORIZE_BUTTON_TIMEOUT = 20
@@ -68,4 +70,5 @@ def set_path(path: str):
 
 # Check whether or not the user setup the virutal environment properly
 if ION_CLIENT_ID is None or ION_CLIENT_SECRET is None or DISCORD_TOKEN is None or DEVELOPMENT is None:
+    print("Missing environmental variable(s)")
     raise Exception("Missing environmental variable(s)")

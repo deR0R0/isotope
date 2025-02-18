@@ -53,7 +53,7 @@ async def on_ready():
 # disable the stupid thing
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-os.system("clear")
+#os.system("clear")
 
 
 # Run bot if this is the main file
