@@ -32,13 +32,51 @@ class DBManager:
 
         # Double check the table is created
         cursor.execute("CREATE TABLE IF NOT EXISTS oauth_tokens (id INTEGER PRIMARY KEY, oauthKey TEXT)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS guilds_settings (id INTEGER PRIMARY KEY, settings TEXT)")
+
+    @staticmethod
+    def setup_server(guild_id: int):
+        global db, cursor
+
+        # Check if the server exists
+        try:
+            cursor.execute(f"SELECT id FROM guilds_settings WHERE id={guild_id}")
+            guild = cursor.fetchone()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.setup_server", f"Error checking if server exists: {e}")
+
+        # If the server does not exist, add it
+        if guild is None:
+            try:
+                cursor.execute(f"INSERT INTO guilds_settings (id, settings) VALUES ({guild_id}, '{json.dumps(Config.DEFAULT_GUILD_SETTINGS)}')")
+                db.commit()
+            except sqlite3.Error as e:
+                Logger.error("DBManager.setup_server", f"Error setting up server: {e}")
+
+    @staticmethod
+    def get_server_settings(guild_id: int):
+        global db, cursor
+
+        # Check if the server exists
+        try:
+            cursor.execute(f"SELECT settings FROM guilds_settings WHERE id={guild_id}")
+            settings = cursor.fetchone()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.get_server_settings", f"Error getting server settings: {e}")
+
+        # If the server does not exist, add it
+        if settings is None:
+            DBManager.setup_server(guild_id)
+            return Config.DEFAULT_GUILD_SETTINGS
+
+        return json.loads(settings[0])
 
     @staticmethod
     def add_user(user_id: int, oauth_token: str):
         global db, cursor
 
         # Insert the user into the database
-        # We are going to santize input before calling the function, doesn't matter
+        # Santization of input is done BEFORE modification of the database
         try:
             cursor.execute(f"INSERT INTO oauth_tokens (id, oauthKey) VALUES ({user_id}, '{oauth_token}')")
             db.commit()

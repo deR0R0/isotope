@@ -10,15 +10,15 @@ from utils.Config import client, oauthSession
 app = Flask(__name__)
 
 @app.route("/")
-def home():
+async def home():
     return "isotope, the home of terrible code :)"
 
 @app.route("/authorize", methods=["GET"])
-def authorize():
+async def authorize():
     Logger.info("app.authorize", "Authorize Page Called")
 
     # Check if command is disabled
-    if CUtils.check_disabled("authorize"):
+    if CUtils.check_disabled("web_page"):
         return "authorization/verification is currently disabled"
     
     # Check if normal request
@@ -40,13 +40,15 @@ def authorize():
     except Exception as err:
         Logger.error("app.authorize", f"Error fetching token: {err}")
         return "err"
-    x = OAuthHelper.link_token_via_state(state, dict(token))
+    
+    user = DBManager.get_user_id_from_token(state)
+    res = OAuthHelper.link_token_via_state(state, dict(token))
 
     # send the correct response back
-    match x:
+    match res:
         case "sql_injection":
             return "nice try"
-        case False:
+        case "not_real_session":
             return "use a real session"
         case _:
             return "success"

@@ -50,7 +50,7 @@ async def on_ready():
     await channel.send(embed=discord.Embed(title=":atom: Authorize to Access the Server", color=discord.Color.green()), view=AuthorizeButton())
     # Create Tasks Loop
 
-# disable the stupid thing
+# disable the stupid auto logger from flask
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 #os.system("clear")

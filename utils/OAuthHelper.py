@@ -5,7 +5,7 @@ from oauthlib.oauth2 import TokenExpiredError, MissingTokenError
 
 class OAuthHelper:
     @staticmethod
-    def check_session(user_id: int):
+    async def check_session(user_id: int):
         Logger.info("OAuthHelper.checkSession", f"Checking session for user \"{user_id}\"")
 
         # Grab token
@@ -45,7 +45,7 @@ class OAuthHelper:
         return True
     
     @staticmethod
-    def link_token_via_state(state: str, token: dict) -> any:
+    async def link_token_via_state(state: str, token: dict) -> any:
         Logger.info("OAuthHelper.link_via_state", f"Linking via state \"{state}\"")
 
         # Check if state has any common sql injection words, ignoring case
@@ -60,7 +60,7 @@ class OAuthHelper:
         # Check if user doesn't exist, 99% will succeed
         if userId is None:
             Logger.warn("OAuthHelper.link_via_state", f"User id for state \"{state}\" is None")
-            return False
+            return "not_real_session"
         
         # set userid's token from state to token
         DBManager.edit_token_user_id(userId, token)
