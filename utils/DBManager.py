@@ -9,6 +9,13 @@ DBNAME = Config.DBMANAGER_DBNAME
 db = None
 cursor = None
 
+"""
+This file is for managing the database.
+Instead of accessing server settings through the commands,
+all the sql queries are done here.
+Please do not modify this at all.
+"""
+
 class DBManager:
     @staticmethod
     def connect():
@@ -34,42 +41,141 @@ class DBManager:
         cursor.execute("CREATE TABLE IF NOT EXISTS oauth_tokens (id INTEGER PRIMARY KEY, oauthKey TEXT)")
         cursor.execute("CREATE TABLE IF NOT EXISTS guilds_settings (id INTEGER PRIMARY KEY, settings TEXT)")
 
+    # This method will most likely not be used, but just in case :)
+    @staticmethod
+    def purge():
+        global db, cursor
+
+        # Drop the tables
+        cursor.execute("DROP TABLE oauth_tokens")
+        cursor.execute("DROP TABLE guilds_settings")
+        db.commit()
+
+        # Recreate the tables
+        DBManager.prepare()
+
+    """
+    ░██████╗░██╗░░░░░░█████╗░██████╗░░█████╗░██╗░░░░░
+    ██╔════╝░██║░░░░░██╔══██╗██╔══██╗██╔══██╗██║░░░░░
+    ██║░░██╗░██║░░░░░██║░░██║██████╦╝███████║██║░░░░░
+    ██║░░╚██╗██║░░░░░██║░░██║██╔══██╗██╔══██║██║░░░░░
+    ╚██████╔╝███████╗╚█████╔╝██████╦╝██║░░██║███████╗
+    ░╚═════╝░╚══════╝░╚════╝░╚═════╝░╚═╝░░╚═╝╚══════╝
+    """
+
+    @staticmethod
+    def select_guild(guild_id: int):
+        global db, cursor
+
+        # Select the guild
+        try:
+            cursor.execute(f"SELECT * FROM guilds_settings WHERE id={guild_id}")
+            guild = cursor.fetchone()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.select_guild", f"Error selecting guild: {e}")
+
+        return guild
+    
+    @staticmethod
+    def update_guild(guild_id: int, settings: dict):
+        global db, cursor
+
+        # Update the guild
+        try:
+            cursor.execute(f"UPDATE guilds_settings SET settings='{json.dumps(settings)}' WHERE id={guild_id}")
+            db.commit()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.update_guild", f"Error updating guild: {e}")
+
+
+    """
+    ░██████╗░██╗░░░██╗██╗██╗░░░░░██████╗░░██████╗
+    ██╔════╝░██║░░░██║██║██║░░░░░██╔══██╗██╔════╝
+    ██║░░██╗░██║░░░██║██║██║░░░░░██║░░██║╚█████╗░
+    ██║░░╚██╗██║░░░██║██║██║░░░░░██║░░██║░╚═══██╗
+    ╚██████╔╝╚██████╔╝██║███████╗██████╔╝██████╔╝
+    ░╚═════╝░░╚═════╝░╚═╝╚══════╝╚═════╝░╚═════╝░
+    """
+
     @staticmethod
     def setup_server(guild_id: int):
         global db, cursor
 
-        # Check if the server exists
-        try:
-            cursor.execute(f"SELECT id FROM guilds_settings WHERE id={guild_id}")
-            guild = cursor.fetchone()
-        except sqlite3.Error as e:
-            Logger.error("DBManager.setup_server", f"Error checking if server exists: {e}")
 
-        # If the server does not exist, add it
-        if guild is None:
-            try:
-                cursor.execute(f"INSERT INTO guilds_settings (id, settings) VALUES ({guild_id}, '{json.dumps(Config.DEFAULT_GUILD_SETTINGS)}')")
-                db.commit()
-            except sqlite3.Error as e:
-                Logger.error("DBManager.setup_server", f"Error setting up server: {e}")
+        # To protect guild settings from unintentionally being overwritten, we check if the guild exists
+        guild = DBManager.select_guild(guild_id)
+
+        if guild is not None:
+            return
+
+        # Insert the server into the database
+        try:
+            cursor.execute(f"INSERT INTO guilds_settings (id, settings) VALUES ({guild_id}, '{json.dumps(Config.DEFAULT_GUILD_SETTINGS)}')")
+            db.commit()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.setup_server", f"Error setting up server: {e}")
+
+        Logger.info("DBManager.setup_server", f"Server \"{guild_id}\" successfully setup")
+
+    @staticmethod
+    def purge_server(guild_id: int):
+        global db, cursor
+
+        # Purge the server from the database
+        try:
+            cursor.execute(f"DELETE FROM guilds_settings WHERE id={guild_id}")
+            db.commit()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.purge_server", f"Error purging server: {e}")
+
+        Logger.info("DBManager.purge_server", f"Server \"{guild_id}\" successfully purged")
 
     @staticmethod
     def get_server_settings(guild_id: int):
         global db, cursor
 
         # Check if the server exists
-        try:
-            cursor.execute(f"SELECT settings FROM guilds_settings WHERE id={guild_id}")
-            settings = cursor.fetchone()
-        except sqlite3.Error as e:
-            Logger.error("DBManager.get_server_settings", f"Error getting server settings: {e}")
+        guild = DBManager.select_guild(guild_id)
 
-        # If the server does not exist, add it
-        if settings is None:
+        if guild is None:
+            Logger.warn("DBManager.get_server_settings", f"Server \"{guild_id}\" does not exist")
             DBManager.setup_server(guild_id)
             return Config.DEFAULT_GUILD_SETTINGS
+        
+        # Attempt to return the guild settings.
+        # In event of invalid json, purge server and return default settings
+        try:
+            return json.loads(guild[1])
+        except json.JSONDecodeError:
+            Logger.info("DBManager.get_server_settings", f"Server \"{guild_id}\" has invalid settings")
+            DBManager.purge_server(guild_id)
+            DBManager.setup_server(guild_id)
+            return Config.DEFAULT_GUILD_SETTINGS
+        
+    @staticmethod
+    def set_server_settings(guild_id: int, settings: dict):
+        global db, cursor
 
-        return json.loads(settings[0])
+        # Check server exists
+        DBManager.setup_server(guild_id)
+
+        # TODO: Check if settings are valid, not necessary right now but will be in the future
+
+        # Update the server settings
+        DBManager.update_guild(guild_id, settings)
+
+    
+
+    """
+    ██╗░░░██╗░██████╗███████╗██████╗░
+    ██║░░░██║██╔════╝██╔════╝██╔══██╗
+    ██║░░░██║╚█████╗░█████╗░░██████╔╝
+    ██║░░░██║░╚═══██╗██╔══╝░░██╔══██╗
+    ╚██████╔╝██████╔╝███████╗██║░░██║
+    ░╚═════╝░╚═════╝░╚══════╝╚═╝░░╚═╝
+    """
+
+    # TODO: Add global methods for user methods. This will make cleaner code and better readability
 
     @staticmethod
     def add_user(user_id: int, oauth_token: str):
@@ -190,6 +296,5 @@ class DBManager:
     def drop_table(table: str):
         global db, cursor
 
-        # Drop the table
         cursor.execute(f"DROP TABLE {table}")
         db.commit()

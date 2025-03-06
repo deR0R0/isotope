@@ -9,12 +9,17 @@ from utils.Config import client, oauthSession
 
 app = Flask(__name__)
 
+"""
+We are using normal flask for the webserver
+We aren't expecting high traffic, otherwise we would use flask async
+"""
+
 @app.route("/")
-async def home():
+def home():
     return "isotope, the home of terrible code :)"
 
 @app.route("/authorize", methods=["GET"])
-async def authorize():
+def authorize():
     Logger.info("app.authorize", "Authorize Page Called")
 
     # Check if command is disabled
