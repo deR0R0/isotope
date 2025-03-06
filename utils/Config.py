@@ -33,12 +33,15 @@ LOGGER_ERROR_COLOR = fore.LIGHTRED_EX
 # Database Stuff
 DBMANAGER_DBNAME = "data.db"
 DEFAULT_GUILD_SETTINGS = {
-    "authorize_channel": None,
-    "authorize_role": None,
-    "authorize_message": "default_embed",
-    "prev_button_id": None,
-    "commands_disabled": { # We aren't allowing guild owners to disable certain commands due to security concerns
-        "authorize": False,
+    "authorize_button_stuff": {
+        "enabled": True,
+        "authorize_channel": None,
+        "authorize_role": None,
+        "authorize_message": "default_embed",
+        "prev_button_id": None,
+        "commands_disabled": { # We aren't allowing guild owners to disable certain commands due to security concerns
+            "authorize": False,
+        }
     }
 }
 
