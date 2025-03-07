@@ -15,10 +15,10 @@ client = commands.Bot(command_prefix="/", intents=DISCORD_INTENTS)
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # Static Discord Embeds
-DISCORD_EMBED_COMMAND_DISABLED = discord.Embed(title=":x: Command Disabled", description="This command is currently disabled", color=discord.Color.red())
+DISCORD_EMBED_COMMAND_DISABLED = discord.Embed(title=":x: Command Disabled", description=":x: Command Global Killed", color=discord.Color.red())
 DISCORD_EMBED_ALREADY_AUTHORIZED = discord.Embed(title=":x: Already Authorized", description="You are already authorized!", color=discord.Color.red())
 DISCORD_EMBED_NOT_AUTHORIZED = discord.Embed(title=":x: Not Authorized", description="You aren't authorized (yet)! Use /authorize to authorize", color=discord.Color.red())
-DISCORD_EMBED_PERM_AUTHORIZE_BUTTON = discord.Embed(title=":atom: Authorize via Ion", description="Please wait while we generate your URL", color=discord.Color.dark_grey())
+DISCORD_EMBED_PERM_AUTHORIZE_BUTTON = discord.Embed(title=":atom: Authorize to Access the Server", color=discord.Color.green())
 
 
 # Logger
@@ -33,23 +33,26 @@ LOGGER_ERROR_COLOR = fore.LIGHTRED_EX
 # Database Stuff
 DBMANAGER_DBNAME = "data.db"
 DEFAULT_GUILD_SETTINGS = {
-    "authorize_button_stuff": {
+    "authorize_button": {
         "enabled": True,
-        "authorize_channel": None,
-        "authorize_role": None,
-        "authorize_message": "default_embed",
+        "channel": None,
+        "errors": None,
+        "role": None,
+        "message": "default_embed",
         "prev_button_id": None,
-        "commands_disabled": { # We aren't allowing guild owners to disable certain commands due to security concerns
-            "authorize": False,
-        }
+        
+    },
+    "commands_disabled": { # We aren't allowing guild owners to disable certain commands due to security concerns
+        "authorize": False,
     }
 }
 
 
 # Command Stuff
 COMMAND_STATUSES = {
-    "web_page": False,
+    "web_page": True,
     "authorize": True,
+    "setup": True,
     "deauthorize": True
 }
 

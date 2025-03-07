@@ -10,6 +10,7 @@ from webserver import app
 
 # Import Commands
 from commands import authorize, deauthorize
+from commands.guild import setup
 
 # Random one time use functions
 def get_path():
@@ -43,12 +44,66 @@ async def on_ready():
     # Show how many servers it's in
     Logger.info("main.on_ready", f"Currently in {len(client.guilds)} servers")
 
-    # Remove previous buttons
+    # Remove Previous buttons from guilds
+    # Add new buttons from guilds
+    for guild in client.guilds:
+        # Check server settings
+        settings = DBManager.get_server_settings(guild.id)
 
-    # Create Button
-    channel: discord.TextChannel = await client.fetch_channel(Config.AUTHORIZE_BUTTON_CHANNEL)
-    await channel.send(embed=discord.Embed(title=":atom: Authorize to Access the Server", color=discord.Color.green()), view=AuthorizeButton())
-    # Create Tasks Loop
+        if not settings["authorize_button"]["enabled"]:
+            continue
+
+        # Get all the necessary settings
+        authorize_channel = settings["authorize_button"]["channel"]
+        prev_button_id = settings["authorize_button"]["prev_button_id"]
+        authorize_message = settings["authorize_button"]["message"]
+
+        # Do some formatting
+        channel = client.get_channel(authorize_channel)
+
+        if channel is None:
+            Logger.warn("main.on_ready", f"Guild: {guild.id} has invalid channel")
+            settings["authorize_button"]["enabled"] = False
+            settings["authorize_button"]["errors"] = "Invalid Channel"
+            DBManager.set_server_settings(guild.id, settings)
+            continue
+
+        try:
+            prev_button = await channel.fetch_message(prev_button_id)
+        except discord.errors.NotFound:
+            settings["authorize_button"]["prev_button_id"] = None
+            prev_button = None
+
+        if authorize_message == "default_embed":
+            authorize_message = Config.DISCORD_EMBED_PERM_AUTHORIZE_BUTTON
+
+        # Attempt to delete the previous button
+        try:
+            if prev_button is not None:
+                await prev_button.delete()
+                prev_button_id = None
+        except discord.errors.Forbidden:
+            Logger.warn("main.on_ready", f"Bot doesn't have perms to delete button in {guild.id}. Please notify guild owner")
+        except Exception as err:
+            Logger.error("main.on_ready", f"Error deleting button: {err}")
+
+        # Send new button
+        try:
+            prev_button_id = await channel.send(embed=authorize_message, view=AuthorizeButton())
+        except discord.errors.Forbidden:
+            Logger.warn("main.on_ready", f"Bot doesn't have perms to send button in {guild.id}. Disabling button setting")
+            settings["authorize_button"]["enabled"] = False
+            settings["authorize_button"]["errors"] = "Cannot Send Button, Check permissions"
+        except Exception as err:
+            Logger.error("main.on_ready", f"Error sending button: {err}")
+
+        settings["authorize_button"]["prev_button_id"] = prev_button_id.id
+
+        DBManager.set_server_settings(guild.id, settings)
+
+
+
+
 
 # disable the stupid auto logger from flask
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
