@@ -69,7 +69,7 @@ class DBManager:
 
         # Select the guild
         try:
-            cursor.execute(f"SELECT * FROM guilds_settings WHERE id={guild_id}")
+            cursor.execute(f"SELECT * FROM guilds_settings WHERE id= ? ", (guild_id, ))
             guild = cursor.fetchone()
         except sqlite3.Error as e:
             Logger.error("DBManager.select_guild", f"Error selecting guild: {e}")
@@ -82,7 +82,7 @@ class DBManager:
 
         # Update the guild
         try:
-            cursor.execute(f"UPDATE guilds_settings SET settings='{json.dumps(settings)}' WHERE id={guild_id}")
+            cursor.execute(f"UPDATE guilds_settings SET settings= ?  WHERE id= ? ", (str(json.dumps(settings)), guild_id))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.update_guild", f"Error updating guild: {e}")
@@ -110,7 +110,7 @@ class DBManager:
 
         # Insert the server into the database
         try:
-            cursor.execute(f"INSERT INTO guilds_settings (id, settings) VALUES ({guild_id}, '{json.dumps(Config.DEFAULT_GUILD_SETTINGS)}')")
+            cursor.execute(f"INSERT INTO guilds_settings (id, settings) VALUES (?, ?)", (guild_id, str(json.dumps(Config.DEFAULT_GUILD_SETTINGS))))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.setup_server", f"Error setting up server: {e}")
@@ -123,7 +123,7 @@ class DBManager:
 
         # Purge the server from the database
         try:
-            cursor.execute(f"DELETE FROM guilds_settings WHERE id={guild_id}")
+            cursor.execute(f"DELETE FROM guilds_settings WHERE id= ? ", (guild_id, ))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.purge_server", f"Error purging server: {e}")
@@ -175,7 +175,9 @@ class DBManager:
     ░╚═════╝░╚═════╝░╚══════╝╚═╝░░╚═╝
     """
 
+    # TODO
     # TODO: Add global methods for user methods. This will make cleaner code and better readability
+    # TODO
 
     @staticmethod
     def add_user(user_id: int, oauth_token: str):
@@ -184,7 +186,7 @@ class DBManager:
         # Insert the user into the database
         # Santization of input is done BEFORE modification of the database
         try:
-            cursor.execute(f"INSERT INTO oauth_tokens (id, oauthKey) VALUES ({user_id}, '{oauth_token}')")
+            cursor.execute("INSERT INTO oauth_tokens (id, oauthKey) VALUES ( ? , ? )", (user_id, oauth_token))
             db.commit()
 
         except sqlite3.IntegrityError: # Happens when the user already exists
@@ -202,7 +204,7 @@ class DBManager:
         # Delete the user from the database
         # We don't need to santize input since userid is something the user cannot change
         try:
-            cursor.execute(f"DELETE FROM oauth_tokens WHERE id={user_id}")
+            cursor.execute(f"DELETE FROM oauth_tokens WHERE id= ? ", (user_id))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.del_user", f"Error deleting user: {e}")
@@ -216,7 +218,7 @@ class DBManager:
 
         # Check if the user exists in the database
         try:
-            cursor.execute(f"SELECT id FROM oauth_tokens WHERE id={user_id}")
+            cursor.execute(f"SELECT id FROM oauth_tokens WHERE id= ? ", (user_id, ))
             user = cursor.fetchone()
         except sqlite3.Error as e:
             Logger.error("DBManager.check_user_exists", f"Error checking if user exists: {e}")
@@ -237,9 +239,9 @@ class DBManager:
         # Update the user's token in the database
         try:
             if type(oauth_token) is dict:
-                cursor.execute(f"UPDATE oauth_tokens SET oauthKey='{json.dumps(oauth_token)}' WHERE id={user_id}")
+                cursor.execute(f"UPDATE oauth_tokens SET oauthKey = ? WHERE id = ? ", (json.dumps(oauth_token), user_id))
             else:
-                cursor.execute(f"UPDATE oauth_tokens SET oauthKey='{oauth_token}' WHERE id={user_id}")
+                cursor.execute(f"UPDATE oauth_tokens SET oauthKey = ?  WHERE id=  ? ", (oauth_token, user_id))
 
             db.commit()
         except sqlite3.Error as e:
@@ -251,7 +253,7 @@ class DBManager:
 
         # Get the user id from the database
         try:
-            cursor.execute(f"SELECT id FROM oauth_tokens WHERE oauthKey='{oauth_token}'")
+            cursor.execute(f"SELECT id FROM oauth_tokens WHERE oauthKey = ? ", (oauth_token, ))
             user_id = cursor.fetchone()
         except sqlite3.Error as e:
             Logger.error("DBManager.get_user_id_from_token", f"Error getting user id from token: {e}")
@@ -270,7 +272,7 @@ class DBManager:
 
         # Get the token from the database
         try:
-            cursor.execute(f"SELECT oauthKey FROM oauth_tokens WHERE id={user_id}")
+            cursor.execute(f"SELECT oauthKey FROM oauth_tokens WHERE id=?", (user_id, ))
             token = cursor.fetchone()
         except sqlite3.Error as e:
             Logger.error("DBManager.get_token_from_user_id", f"Error getting token from user id: {e}")
@@ -280,6 +282,11 @@ class DBManager:
             Logger.warn("DBManager.get_token_from_user_id", f"Token for user \"{user_id}\" is null")
             return None
         
+        """
+        Checks whether or not the token is a valid json object
+        If it is, format into a dictionary and return it
+        If it isn't, return the token as a string (most likely because it's a state token)
+        """
         try:
             json.loads(token[0])
         except json.JSONDecodeError:

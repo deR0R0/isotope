@@ -52,8 +52,10 @@ DEFAULT_GUILD_SETTINGS = {
 COMMAND_STATUSES = {
     "web_page": True,
     "authorize": True,
-    "setup": True,
-    "deauthorize": True
+    "deauthorize": True,
+    "guild_setup": True,
+    "guild_settings": True,
+    "guild_set_authorize-channel": True,
 }
 
 # Command Names and Descriptions
@@ -74,7 +76,6 @@ if DEVELOPMENT == "True":
     ION_REDIRECT_URI = "http://localhost:1211/authorize"
 
 oauthSession = OAuth2Session(client_id=ION_CLIENT_ID, redirect_uri=ION_REDIRECT_URI, scope=["read"])
-SQL_INJECTION_WORDS = ["--", ";", "select", "drop", "where", "from", "and", "true", "false", "oauthkey", "id", "="] # this is not how you prevent sql injects but whatever
 
 # Authorize Command Stuff
 AUTHORIZE_BUTTON_TIMEOUT = 20

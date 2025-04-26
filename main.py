@@ -10,7 +10,7 @@ from webserver import app
 
 # Import Commands
 from commands import authorize, deauthorize
-from commands.guild import setup
+from commands.guild import settings
 
 # Random one time use functions
 def get_path():
@@ -105,10 +105,10 @@ async def on_ready():
 
 
 
-# disable the stupid auto logger from flask
+# disable the stupid auto logger from flask, with the exception of error logging
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-#os.system("clear")
+os.system("clear")
 
 
 # Run bot if this is the main file
