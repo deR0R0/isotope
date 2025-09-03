@@ -12,6 +12,9 @@ from webserver import app
 from commands import authorize, deauthorize
 from commands.guild import settings
 
+# import jobs
+from jobs import AddUserRole
+
 # Random one time use functions
 def get_path():
     if getattr(sys, 'frozen', False):
@@ -27,13 +30,12 @@ class AuthorizeButton(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Authorize", style=discord.ButtonStyle.success, emoji="🔒")
-    async def authorize(self, interaction: discord.Interaction, button: discord.ui.Button):
-        Logger.info("main.AuthorizeButton.authorize", f"Authorize Button Clicked by {interaction.user.name}")
+    @discord.ui.button(label="Verify", style=discord.ButtonStyle.success, emoji="🔒")
+    async def verify(self, interaction: discord.Interaction, button: discord.ui.Button):
+        Logger.info("main.AuthorizeButton.verify", f"Verify Button Clicked by {interaction.user.name}")
         await authorize(interaction)
         
 
-# On ready event
 @client.event
 async def on_ready():
     Logger.info("main.on_ready", "Bot is ready")
@@ -102,6 +104,9 @@ async def on_ready():
         DBManager.set_server_settings(guild.id, settings)
 
 
+    AddUserRole.add_user_role.start()
+
+
 
 
 
@@ -114,5 +119,6 @@ os.system("clear")
 # Run bot if this is the main file
 if __name__ == "__main__":
     DBManager.connect()
+    DBManager.del_user(668626305188757536)
     app.run_via_thread()
     client.run(Config.DISCORD_TOKEN)

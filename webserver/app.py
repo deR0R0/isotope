@@ -9,11 +9,6 @@ from utils.Config import client, oauthSession
 
 app = Flask(__name__)
 
-"""
-We are using normal flask for the webserver
-We aren't expecting high traffic, otherwise we would use flask async
-"""
-
 @app.route("/")
 def home():
     return "isotope, the home of terrible code :)"
@@ -51,8 +46,6 @@ def authorize():
 
     # send the correct response back
     match res:
-        case "sql_injection":
-            return "nice try"
         case "not_real_session":
             return "use a real session"
         case _:

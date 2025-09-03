@@ -1,7 +1,7 @@
 import sys, discord
 
 sys.path.insert(1, sys.path[0].replace("commands", ""))
-from utils import Logger, Config, DBManager, CUtils, OAuthHelper, UserTools
+from utils import Logger, Config, DBManager, CUtils, OAuthHelper
 from utils.Config import client, oauthSession
 from utils.Exceptions import *
 

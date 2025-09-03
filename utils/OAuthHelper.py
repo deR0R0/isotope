@@ -4,6 +4,7 @@ from . import Config, DBManager, Logger
 from .Exceptions import NoTokenError, InvalidTokenFormatError, InvalidTokenError, FakeStateError
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError, MissingTokenError
+import discord
 
 class OAuthHelper:
     @staticmethod
@@ -51,7 +52,6 @@ class OAuthHelper:
     @staticmethod
     def check_session(user_id: int) -> bool:
         """
-        TL;DR:
         Gets the token from the userid.
         Checks whether or not the token is valid. (No token / State "token")
         Creates an oauth2 session based on the token.

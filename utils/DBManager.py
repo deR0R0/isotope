@@ -180,6 +180,20 @@ class DBManager:
     # TODO
 
     @staticmethod
+    def get_all_users():
+        global db, cursor
+
+        # git all the userz
+        try:
+            cursor.execute(f"SELECT id, oauthKey FROM oauth_tokens")
+            users = cursor.fetchall()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.get_all_users", f"Error getting all users: {e}")
+            return []
+
+        return users
+
+    @staticmethod
     def add_user(user_id: int, oauth_token: str):
         global db, cursor
 
@@ -204,7 +218,7 @@ class DBManager:
         # Delete the user from the database
         # We don't need to santize input since userid is something the user cannot change
         try:
-            cursor.execute(f"DELETE FROM oauth_tokens WHERE id= ? ", (user_id))
+            cursor.execute(f"DELETE FROM oauth_tokens WHERE id= ? ", (user_id, ))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.del_user", f"Error deleting user: {e}")

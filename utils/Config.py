@@ -18,7 +18,7 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 DISCORD_EMBED_COMMAND_DISABLED = discord.Embed(title=":x: Command Disabled", description=":x: Command Global Killed", color=discord.Color.red())
 DISCORD_EMBED_ALREADY_AUTHORIZED = discord.Embed(title=":x: Already Authorized", description="You are already authorized!", color=discord.Color.red())
 DISCORD_EMBED_NOT_AUTHORIZED = discord.Embed(title=":x: Not Authorized", description="You aren't authorized (yet)! Use /authorize to authorize", color=discord.Color.red())
-DISCORD_EMBED_PERM_AUTHORIZE_BUTTON = discord.Embed(title=":atom: Authorize to Access the Server", color=discord.Color.green())
+DISCORD_EMBED_PERM_AUTHORIZE_BUTTON = discord.Embed(title=":atom: DISFUNCTIONAL", color=discord.Color.red())
 
 
 # Logger
