@@ -23,8 +23,6 @@ async def add_user_role():
     for uIndex in range(len(allUsers)):
         # if user is not in old users, just run it thru idc
         user, oauth = allUsers[uIndex]
-        if(user != 668626305188757536):
-            continue
 
         if uIndex < len(allOldUsers):
             oldUser, oldOauth = allOldUsers[uIndex]

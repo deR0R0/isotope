@@ -71,7 +71,7 @@ ION_AUTHORIZATION_URL = "https://ion.tjhsst.edu/oauth/authorize"
 ION_TOKEN_URL = "https://ion.tjhsst.edu/oauth/token"
 
 # Change redirect uri based on whether or not the application is in development or not
-ION_REDIRECT_URI = "https://isotope.der0r0.hackclub.app/authorize"
+ION_REDIRECT_URI = "https://isotope.sites.tjhsst.edu/authorize"
 if DEVELOPMENT == "True":
     ION_REDIRECT_URI = "http://localhost:1211/authorize"
 

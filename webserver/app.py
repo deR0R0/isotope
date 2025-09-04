@@ -1,9 +1,11 @@
-import sys
+import sys, os
 from threading import Thread
 from flask import Flask, request, render_template
 from oauthlib.oauth2 import InvalidGrantError
 
 sys.path.insert(1, sys.path[0].replace("commands", ""))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from main import run_bot_via_thread
 from utils import Logger, Config, DBManager, CUtils, OAuthHelper
 from utils.Config import client, oauthSession
 
@@ -52,10 +54,11 @@ def authorize():
             return "success"
 
 
-def run():
+if __name__ == "__main__":
+    run_bot_via_thread()
     app.run(host="0.0.0.0", port=1211)
+    sys.exit(0)
 
-def run_via_thread():
-    t = Thread(target=run)
-    t.start()
-    return
+# when it runs using gunicorn
+run_bot_via_thread()
+app.run(host="0.0.0.0", port=1211)

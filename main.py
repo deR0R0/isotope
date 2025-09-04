@@ -1,12 +1,13 @@
 # Import packages
 import sys, os, discord, asyncio, logging
+from threading import Thread
 from discord import app_commands
 from discord.ext import commands
 
 # Import custom modules
 from utils import Logger, Config, DBManager, CUtils, OAuthHelper
 from utils.Config import client, oauthSession
-from webserver import app
+#from webserver import app
 
 # Import Commands
 from commands import authorize, deauthorize
@@ -116,9 +117,11 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 os.system("clear")
 
 
-# Run bot if this is the main file
-if __name__ == "__main__":
+# run the bot via a thread
+def run_bot():
     DBManager.connect()
-    DBManager.del_user(668626305188757536)
-    app.run_via_thread()
     client.run(Config.DISCORD_TOKEN)
+
+def run_bot_via_thread():
+    t = Thread(target=run_bot)
+    t.start()
