@@ -119,6 +119,5 @@ os.system("clear")
 # Run bot if this is the main file
 if __name__ == "__main__":
     DBManager.connect()
-    DBManager.del_user(668626305188757536)
     app.run_via_thread()
     client.run(Config.DISCORD_TOKEN)
