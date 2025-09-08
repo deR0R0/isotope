@@ -61,4 +61,3 @@ if __name__ == "__main__":
 
 # when it runs using gunicorn
 run_bot_via_thread()
-app.run(host="0.0.0.0", port=1211)
