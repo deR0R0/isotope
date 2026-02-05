@@ -8,6 +8,29 @@ import discord
 
 class OAuthHelper:
     @staticmethod
+    def return_user_data(user_id: int) -> dict:
+        token = DBManager.get_token_from_user_id(user_id)
+
+        if token is None:
+            raise NoTokenError(f"Missing token for user \"{user_id}\"")
+        
+        if type(token) is not dict:
+            raise InvalidTokenFormatError(f"Incorrect data type for token. Expect: dict, got: {type(token)}")
+
+        oauthSession = OAuth2Session(Config.ION_CLIENT_ID, token=token)
+
+        try:
+            res = oauthSession.get("https://ion.tjhsst.edu/api/profile").json()
+            return res
+        except ValueError:
+            raise InvalidTokenError(f"Session for user \"{user_id}\" is invalid")
+        except TokenExpiredError:
+            OAuthHelper.refresh_token(user_id, oauthSession)
+            return OAuthHelper.return_user_data(user_id)
+        except Exception as e:
+            raise e
+
+    @staticmethod
     def refresh_token(user_id: int, session: OAuth2Session):
         try:
             args = {"client_id": Config.ION_CLIENT_ID, "client_secret": Config.ION_CLIENT_SECRET}

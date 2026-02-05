@@ -12,6 +12,7 @@ from utils.Config import client, oauthSession
 # Import Commands
 from commands import authorize, deauthorize
 from commands.guild import settings
+from commands.WhoIs import whois
 
 # import jobs
 from jobs import AddUserRole

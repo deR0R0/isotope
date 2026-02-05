@@ -40,6 +40,7 @@ class DBManager:
         # Double check the table is created
         cursor.execute("CREATE TABLE IF NOT EXISTS oauth_tokens (id INTEGER PRIMARY KEY, oauthKey TEXT)")
         cursor.execute("CREATE TABLE IF NOT EXISTS guilds_settings (id INTEGER PRIMARY KEY, settings TEXT)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS user_flags (id INTEGER PRIMARY KEY, intro_dm_sent INTEGER DEFAULT 0)")
 
     # This method will most likely not be used, but just in case :)
     @staticmethod
@@ -49,6 +50,7 @@ class DBManager:
         # Drop the tables
         cursor.execute("DROP TABLE oauth_tokens")
         cursor.execute("DROP TABLE guilds_settings")
+        cursor.execute("DROP TABLE user_flags")
         db.commit()
 
         # Recreate the tables
@@ -219,12 +221,61 @@ class DBManager:
         # We don't need to santize input since userid is something the user cannot change
         try:
             cursor.execute(f"DELETE FROM oauth_tokens WHERE id= ? ", (user_id, ))
+            cursor.execute(f"DELETE FROM user_flags WHERE id= ? ", (user_id, ))
             db.commit()
         except sqlite3.Error as e:
             Logger.error("DBManager.del_user", f"Error deleting user: {e}")
             return False
         
         return True
+
+    @staticmethod
+    def _check_user_flags_exists(user_id: int):
+        global db, cursor
+
+        try:
+            cursor.execute("SELECT id FROM user_flags WHERE id= ? ", (user_id, ))
+            user = cursor.fetchone()
+        except sqlite3.Error as e:
+            Logger.error("DBManager._check_user_flags_exists", f"Error checking user flags: {e}")
+            return
+
+        if user is None:
+            try:
+                cursor.execute("INSERT INTO user_flags (id, intro_dm_sent) VALUES ( ? , 0)", (user_id, ))
+                db.commit()
+            except sqlite3.Error as e:
+                Logger.error("DBManager._check_user_flags_exists", f"Error creating user flags: {e}")
+
+    @staticmethod
+    def get_intro_dm_sent(user_id: int) -> bool:
+        global db, cursor
+
+        DBManager._check_user_flags_exists(user_id)
+
+        try:
+            cursor.execute("SELECT intro_dm_sent FROM user_flags WHERE id= ? ", (user_id, ))
+            sent = cursor.fetchone()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.get_intro_dm_sent", f"Error getting intro dm flag: {e}")
+            return False
+
+        if sent is None:
+            return False
+
+        return sent[0] == 1
+
+    @staticmethod
+    def set_intro_dm_sent(user_id: int, sent: bool):
+        global db, cursor
+
+        DBManager._check_user_flags_exists(user_id)
+
+        try:
+            cursor.execute("UPDATE user_flags SET intro_dm_sent = ? WHERE id= ? ", (1 if sent else 0, user_id))
+            db.commit()
+        except sqlite3.Error as e:
+            Logger.error("DBManager.set_intro_dm_sent", f"Error setting intro dm flag: {e}")
     
     @staticmethod
     def check_user_exists(user_id: int):

@@ -72,6 +72,8 @@ async def add_user_role():
                 continue
 
         if verified:
+            if DBManager.get_intro_dm_sent(user):
+                continue
             # do other stuff
             introductionEmbed = discord.Embed(title=":wave: Hello There!", description="")
             introductionEmbed.description += "It seems like it's your first time verifying!\n"
@@ -86,10 +88,13 @@ async def add_user_role():
 
             try:
                 await currentUser.send(embed=introductionEmbed)
+                DBManager.set_intro_dm_sent(user, True)
             except discord.Forbidden:
                 Logger.warn("jobs.AddUserRole.add_user_role", f"Failed to send introduction DM to user \"{currentUser.name}\". Most likely has DMs off.")
+                DBManager.set_intro_dm_sent(user, True)
             except Exception as e:
                 Logger.error("jobs.AddUserRole.add_user_role", f"Failed to send introduction DM to user \"{currentUser.name}\": {e}")
+                DBManager.set_intro_dm_sent(user, True)
 
 
     allOldUsers = allUsersDict.items()
